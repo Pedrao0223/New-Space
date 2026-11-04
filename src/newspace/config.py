@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import quote
 
 
 def resolve_project_root() -> Path:
@@ -18,7 +19,31 @@ DATA_RAW_DIR: Path = DATA_DIR / "raw"
 DATA_PROCESSED_DIR: Path = DATA_DIR / "processed"
 DB_PATH: Path = DATA_PROCESSED_DIR / "newspace_analytics.db"
 REPORTS_DIR: Path = PROJECT_ROOT / "reports"
+DOCS_DIR: Path = PROJECT_ROOT / "docs"
 NOTEBOOKS_DIR: Path = PROJECT_ROOT / "notebooks"
+
+
+FAVICON_SVG: str = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#160D18"/>
+      <stop offset="55%" stop-color="#23145B"/>
+      <stop offset="100%" stop-color="#09456C"/>
+    </linearGradient>
+    <linearGradient id="orb" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#026F6E"/>
+      <stop offset="100%" stop-color="#1CA39E"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)" stroke="#1CA39E" stroke-width="2"/>
+  <ellipse cx="32" cy="32" rx="24" ry="10" transform="rotate(-32 32 32)" fill="none" stroke="url(#orb)" stroke-width="3.2"/>
+  <circle cx="32" cy="32" r="9.5" fill="#1CA39E"/>
+  <circle cx="29" cy="29.5" r="2.2" fill="#09456C" opacity="0.65"/>
+  <circle cx="36" cy="35" r="1.6" fill="#09456C" opacity="0.65"/>
+  <circle cx="49" cy="21" r="3.6" fill="#F1F5F9"/>
+</svg>"""
+
+FAVICON_DATA_URI: str = "data:image/svg+xml," + quote(FAVICON_SVG)
 
 
 @dataclass(frozen=True)

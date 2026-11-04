@@ -14,7 +14,7 @@ from newspace.benchmarking import (
     benchmark_clustering_mining,
     benchmark_data_engines,
 )
-from newspace.config import DB_PATH, NOTEBOOKS_DIR, PALETTE, REPORTS_DIR
+from newspace.config import DB_PATH, DOCS_DIR, NOTEBOOKS_DIR, PALETTE, REPORTS_DIR
 from newspace.ingestion import load_all_real_datasets, verify_provenance
 from newspace.selection_trends import (
     analyze_information_production_trends,
@@ -144,6 +144,7 @@ def test_executed_notebook_and_dashboard_artifacts():
     assert all(c.execution_count is not None for c in code_cells), "All code cells must be executed"
 
     dash_html = dash_path.read_text(encoding="utf-8")
+    rep_html = html_rep_path.read_text(encoding="utf-8")
     for hex_color in [
         PALETTE.cosmic_bg,
         PALETTE.space_violet,
@@ -152,3 +153,20 @@ def test_executed_notebook_and_dashboard_artifacts():
         PALETTE.vibrant_cyan,
     ]:
         assert hex_color.lower() in dash_html.lower()
+
+    # Verify favicon link & clean proportional Portuguese column headers (zero raw snake_case headers)
+    assert '<link rel="icon"' in dash_html
+    assert '<link rel="icon"' in rep_html
+    assert (DOCS_DIR / "favicon.svg").exists()
+    assert (DOCS_DIR / "index.html").exists()
+    assert (DOCS_DIR / "relatorio.html").exists()
+
+    for raw_col in (
+        "era_espacial",
+        "media_anual_obj_orbitais",
+        "media_anual_neos_descobertos",
+        "latencia_total_mediana_ms",
+        "brier_score_calibracao",
+    ):
+        assert raw_col not in rep_html
+        assert raw_col not in dash_html

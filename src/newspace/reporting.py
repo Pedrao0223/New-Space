@@ -1,7 +1,8 @@
 """Automated Technical Decision Report Generator (.md and print-ready .html).
 
 Synthesizes empirical findings from the Benchmarking Engine, Information Production
-Trend Analysis, and MCDA TOPSIS + Actuarial Risk Modeling into an executive report.
+Trend Analysis, and MCDA TOPSIS + Actuarial Risk Modeling into an executive report
+with clean proportional Portuguese headers and responsive typography.
 """
 
 from __future__ import annotations
@@ -12,9 +13,55 @@ from pathlib import Path
 import pandas as pd
 
 from newspace.benchmarking import BenchmarkSuiteResults
-from newspace.config import PALETTE, REPORTS_DIR
+from newspace.config import DOCS_DIR, FAVICON_DATA_URI, FAVICON_SVG, PALETTE, REPORTS_DIR
 from newspace.ingestion import MinedDatasets
 from newspace.selection_trends import SelectionDecisionOutput, TrendAnalysisSummary
+
+
+def _format_spec_label(val: str) -> str:
+    return "Não Medido" if str(val) == "NAO_ESPECTROGRAFADO" else str(val)
+
+
+def _render_proportional_html_table(
+    df: pd.DataFrame, right_align_from_col: int = 1
+) -> str:
+    """Render a clean, proportional HTML table with left-aligned labels and right-aligned metrics."""
+    headers_html = []
+    for idx, col in enumerate(df.columns):
+        cls = "num-col" if idx >= right_align_from_col else "txt-col"
+        headers_html.append(f'<th class="{cls}">{col}</th>')
+
+    rows_html = []
+    for _, row in df.iterrows():
+        cells = []
+        for idx, val in enumerate(row):
+            cls = "num-col" if idx >= right_align_from_col else "txt-col"
+            cells.append(f'<td class="{cls}">{val}</td>')
+        rows_html.append("<tr>" + "".join(cells) + "</tr>")
+
+    return (
+        '<div class="table-wrap"><table class="data-table">'
+        "<thead><tr>" + "".join(headers_html) + "</tr></thead>"
+        "<tbody>" + "".join(rows_html) + "</tbody>"
+        "</table></div>"
+    )
+
+
+def format_era_table_for_display(era_df: pd.DataFrame) -> pd.DataFrame:
+    """Format Era Comparison table with clean, proportional Portuguese titles."""
+    out = pd.DataFrame(
+        {
+            "Era Espacial": era_df["era_espacial"],
+            "Anos": era_df["anos_completos"].map(lambda v: f"{int(v)}"),
+            "Objetos Orbitais / Ano": era_df["media_anual_obj_orbitais"].map(lambda v: f"{v:,.1f}"),
+            "Satélites (PAY) / Ano": era_df["media_anual_cargas_pay"].map(lambda v: f"{v:,.1f}"),
+            "NEOs Descobertos / Ano": era_df["media_anual_neos_descobertos"].map(lambda v: f"{v:,.1f}"),
+            "Cargas / Voo": era_df["media_cargas_por_foguete"].map(lambda v: f"{v:.2f}"),
+            "Sucesso Médio": era_df["taxa_sucesso_media_pct"].map(lambda v: f"{v:.2f}%"),
+            "Índice Info": era_df["indice_info_medio"].map(lambda v: f"{v:.1f}"),
+        }
+    )
+    return out
 
 
 def generate_technical_decision_report(
@@ -28,6 +75,7 @@ def generate_technical_decision_report(
     reports_dir.mkdir(parents=True, exist_ok=True)
     md_path = reports_dir / "relatorio_tecnico_decisao.md"
     html_path = reports_dir / "relatorio_tecnico_decisao.html"
+    (reports_dir / "favicon.svg").write_text(FAVICON_SVG, encoding="utf-8")
 
     # Extract exact empirical metrics (zero hardcoded numbers!)
     n_sat = len(datasets.satellites)
@@ -75,44 +123,94 @@ def generate_technical_decision_report(
         datasets.corridors["id_corredor"] == "HEO_CISLUNAR"
     ].iloc[0]
 
-    top10_targets = selection.ranked_asteroids[
-        [
-            "ranking_topsis",
-            "pdes",
-            "nome_completo",
-            "classe_espectral",
-            "min_delta_v_kms",
-            "duracao_min_dv_dias",
-            "diametro_fisico_ref_m",
-            "num_observacoes",
-            "codigo_incerteza_occ",
-            "score_topsis",
-        ]
-    ].head(10)
+    # Build human-readable formatted tables with clean proportional headers
+    disp_eng = pd.DataFrame(
+        {
+            "Motor Analítico / Persistência": bench.engine_summary["engine"],
+            "Latência Total (ms)": bench.engine_summary["latencia_total_mediana_ms"].map(lambda v: f"{v:.2f}"),
+            "Média / Carga (ms)": bench.engine_summary["latencia_media_ms"].map(lambda v: f"{v:.2f}"),
+            "P95 (ms)": bench.engine_summary["p95_medio_ms"].map(lambda v: f"{v:.2f}"),
+            "Memória Pico (KB)": bench.engine_summary["pico_memoria_max_kb"].map(lambda v: f"{v:,.1f}"),
+            "Vazão (mil reg/s)": bench.engine_summary["throughput_medio_krows_s"].map(lambda v: f"{v:,.1f}"),
+            "Speedup": bench.engine_summary["speedup_vs_sqlite_sem_indice"].map(lambda v: f"{v:.2f}x"),
+        }
+    )
 
-    top5_lv = selection.qualified_launchers[
-        [
-            "modelo_veiculo",
-            "agencia_principal",
-            "total_lancamentos",
-            "taxa_sucesso_pct",
-            "wilson_lower_95_pct",
-            "ultimo_voo_ano",
-        ]
-    ].head(5)
+    disp_clust = pd.DataFrame(
+        {
+            "Algoritmo Não-Supervisionado": bench.clustering_benchmark["algoritmo"],
+            "Alvos NHATS": bench.clustering_benchmark["amostras_nhats"].map(lambda v: f"{int(v):,}"),
+            "Silhouette": bench.clustering_benchmark["silhouette_score"].map(lambda v: f"{v:.4f}"),
+            "Calinski-Harabasz": bench.clustering_benchmark["calinski_harabasz"].map(lambda v: f"{v:,.1f}"),
+            "Davies-Bouldin": bench.clustering_benchmark["davies_bouldin"].map(lambda v: f"{v:.4f}"),
+            "Tempo (ms)": bench.clustering_benchmark["tempo_execucao_ms"].map(lambda v: f"{v:.1f}"),
+        }
+    )
 
-    top8_scen = selection.actuarial_scenarios[
-        [
-            "id_cenario",
-            "nome_asteroide",
-            "modelo_veiculo",
-            "min_delta_v_kms",
-            "indice_maturidade_info",
-            "score_topsis",
-            "score_risco_combinado",
-            "rating_atuarial",
-        ]
-    ].head(8)
+    disp_clf = pd.DataFrame(
+        {
+            "Modelo Preditivo Atuarial": bench.classification_benchmark["modelo_atuarial"],
+            "Voos": bench.classification_benchmark["lancamentos_avaliados"].map(lambda v: f"{int(v):,}"),
+            "ROC-AUC": bench.classification_benchmark["roc_auc"].map(lambda v: f"{v:.4f}"),
+            "PR-AUC": bench.classification_benchmark["pr_auc"].map(lambda v: f"{v:.4f}"),
+            "Brier Score": bench.classification_benchmark["brier_score_calibracao"].map(lambda v: f"{v:.5f}"),
+            "Log-Loss": bench.classification_benchmark["log_loss"].map(lambda v: f"{v:.4f}"),
+            "F1-Score": bench.classification_benchmark["f1_weighted"].map(lambda v: f"{v:.4f}"),
+            "Tempo CV (ms)": bench.classification_benchmark["tempo_cv_5fold_ms"].map(lambda v: f"{v:,.0f}"),
+        }
+    )
+
+    disp_era = format_era_table_for_display(trends.era_comparison)
+
+    disp_funnel = pd.DataFrame(
+        {
+            "Etapa do Funil de Seleção de Dados": selection.funnel_stages["etapa_funil"],
+            "Candidatos Qualificados": selection.funnel_stages["candidatos"].map(lambda v: f"{int(v):,}"),
+            "Retenção Global": selection.funnel_stages["retencao_global_pct"].map(lambda v: f"{v:.3f}%"),
+        }
+    )
+
+    raw_top10 = selection.ranked_asteroids.head(10)
+    disp_top10 = pd.DataFrame(
+        {
+            "Rank": raw_top10["ranking_topsis"].map(lambda v: f"#{int(v)}"),
+            "Designação": raw_top10["pdes"],
+            "Asteroide Oficial (NASA JPL)": raw_top10["nome_completo"],
+            "Espectro": raw_top10["classe_espectral"].map(_format_spec_label),
+            "Δv Mín. (km/s)": raw_top10["min_delta_v_kms"].map(lambda v: f"{v:.3f}"),
+            "Duração (d)": raw_top10["duracao_min_dv_dias"].map(lambda v: f"{int(v)}"),
+            "Diâm. Ref. (m)": raw_top10["diametro_fisico_ref_m"].map(lambda v: f"{v:,.1f}"),
+            "Obs.": raw_top10["num_observacoes"].map(lambda v: f"{int(v):,}"),
+            "OCC": raw_top10["codigo_incerteza_occ"].map(lambda v: f"{int(v)}"),
+            "TOPSIS": raw_top10["score_topsis"].map(lambda v: f"{v:.2f}"),
+        }
+    )
+
+    raw_lv = selection.qualified_launchers.head(5)
+    disp_lv = pd.DataFrame(
+        {
+            "Veículo Lançador": raw_lv["modelo_veiculo"],
+            "Operador": raw_lv["agencia_principal"],
+            "Voos Orbitais": raw_lv["total_lancamentos"].map(lambda v: f"{int(v):,}"),
+            "Sucesso Empírico": raw_lv["taxa_sucesso_pct"].map(lambda v: f"{v:.2f}%"),
+            "Wilson 95%": raw_lv["wilson_lower_95_pct"].map(lambda v: f"{v:.2f}%"),
+            "Último Voo": raw_lv["ultimo_voo_ano"].map(lambda v: f"{int(v)}"),
+        }
+    )
+
+    raw_scen = selection.actuarial_scenarios.head(8)
+    disp_scen = pd.DataFrame(
+        {
+            "Cenário": raw_scen["id_cenario"],
+            "Asteroide Alvo": raw_scen["nome_asteroide"],
+            "Veículo Lançador": raw_scen["modelo_veiculo"],
+            "Δv (km/s)": raw_scen["min_delta_v_kms"].map(lambda v: f"{v:.3f}"),
+            "Maturidade Info": raw_scen["indice_maturidade_info"].map(lambda v: f"{v:.1f}"),
+            "TOPSIS": raw_scen["score_topsis"].map(lambda v: f"{v:.2f}"),
+            "Risco Combinado": raw_scen["score_risco_combinado"].map(lambda v: f"{v:.2f}"),
+            "Rating": raw_scen["rating_atuarial"],
+        }
+    )
 
     now_str = datetime.now().strftime("%d/%m/%Y %H:%M")
 
@@ -143,21 +241,21 @@ Este relatório consolida os resultados quantitativos do **Benchmarking de Miner
 
 A evolução do modelo relacional da Fase 1 foi avaliada frente a motores analíticos vetorizados modernos em três cargas representativas de negócio (joins de tráfego orbital, filtragem astrodinâmica NHATS e agregação histórica atuarial):
 
-{bench.engine_summary.to_markdown(index=False)}
+{disp_eng.to_markdown(index=False)}
 
 **Conclusões de Engenharia de Dados:**
 - **Motor Analítico Vencedor:** **{best_eng['engine']}** atingiu latência total mediana de **{best_eng['latencia_total_mediana_ms']:.2f} ms** (**{best_eng['speedup_vs_sqlite_sem_indice']:.2f}x mais rápido** que o SQLite relacional sem índices).
-- **Validação da Indexação Relacional:** A adição de índices compostos B-Tree e modo `WAL` no SQLite acelerou as consultas relacionais em **{sqlite_speedup:.2f}x** ({sqlite_unidx['latencia_total_mediana_ms']:.2f} ms $\\rightarrow$ {sqlite_idx['latencia_total_mediana_ms']:.2f} ms), validando o SQLite indexado para persistência transacional (ACID + chaves estrangeiras) em conjunto com **Apache Parquet ({parquet_row['tamanho_mb']:.2f} MB vs {raw_row['tamanho_mb']:.2f} MB brutos — compressão de {parquet_row['razao_compressao_vs_bruto']:.2f}x)** para analytics em tempo real.
+- **Validação da Indexação Relacional:** A adição de índices compostos cobertos B-Tree, estatísticas `ANALYZE` e modo `WAL` no SQLite acelerou as consultas relacionais em **{sqlite_speedup:.2f}x** ({sqlite_unidx['latencia_total_mediana_ms']:.2f} ms $\\rightarrow$ {sqlite_idx['latencia_total_mediana_ms']:.2f} ms), validando o SQLite indexado para persistência transacional (ACID + chaves estrangeiras) em conjunto com **Apache Parquet ({parquet_row['tamanho_mb']:.2f} MB vs {raw_row['tamanho_mb']:.2f} MB brutos — compressão de {parquet_row['razao_compressao_vs_bruto']:.2f}x)** para analytics em tempo real.
 
 ### 2.2 Benchmarking de Algoritmos de Mineração de Dados (Clusterização e Risco Atuarial)
 
 #### A. Segmentação Não-Supervisionada de Asteroides Acessíveis (NASA NHATS)
-{bench.clustering_benchmark.to_markdown(index=False)}
+{disp_clust.to_markdown(index=False)}
 
 - O algoritmo **{best_clust['algoritmo']}** obteve a maior coesão estrutural (**Silhouette = {best_clust['silhouette_score']:.4f}**, **Davies-Bouldin = {best_clust['davies_bouldin']:.4f}** em **{best_clust['tempo_execucao_ms']:.1f} ms**), isolando o agrupamento de alvos de órbita quase-terrestre de baixo $\\Delta v$ dos objetos de alta excentricidade.
 
 #### B. Modelagem Preditiva Supervisionada de Sinistro de Lançamento (Validação Cruzada Estratificada 5-Fold, Sem Vazamento Temporal)
-{bench.classification_benchmark.to_markdown(index=False)}
+{disp_clf.to_markdown(index=False)}
 
 - **Modelo Atuarial Recomendado:** **{best_clf['modelo_atuarial']}** entregou **ROC-AUC = {best_clf['roc_auc']:.4f}** e **Brier Score = {best_clf['brier_score_calibracao']:.5f}** (calibração probabilística essencial para precificação de prêmios securitários).
 - **Principal Fator Empírico de Risco:** *{top_risk_factor['fator_risco']}* responde por **{top_risk_factor['importancia_relativa_pct']:.2f}%** do poder explicativo do modelo, demonstrando que herança real acumulada e histórico prévio superam variáveis isoladas de porte de carga.
@@ -168,7 +266,7 @@ A evolução do modelo relacional da Fase 1 foi avaliada frente a motores analí
 
 A comparação estrutural entre as três eras espaciais comprova uma mudança de regime exponencial na geração de telemetria orbital e astrometria de espaço profundo:
 
-{trends.era_comparison.to_markdown(index=False)}
+{disp_era.to_markdown(index=False)}
 
 ### Principais Evidências Quantitativas para Tomada de Decisão:
 1. **Explosão de Telemetria na Era NewSpace (2015–2026):** A média anual de objetos orbitais catalogados saltou de **{era_1['media_anual_obj_orbitais']:.0f}/ano** na Era Clássica para **{era_3['media_anual_obj_orbitais']:.0f}/ano** na Era NewSpace, enquanto a descoberta anual de asteroides próximos à Terra cresceu de **{era_1['media_anual_neos_descobertos']:.1f}/ano** para **{era_3['media_anual_neos_descobertos']:.0f}/ano**.
@@ -186,16 +284,16 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
 - **Alerta Crítico no Corredor de Escape `HEO_CISLUNAR`:** Das **{int(cor_cislunar['objetos_em_orbita']):,} estruturas em órbita** no corredor elíptico/cislunar obrigatório para missões a asteroides, **{cor_cislunar['razao_detritos_pct']:.1f}% ({int(cor_cislunar['detritos_e_estagios_orbita']):,} objetos)** são estágios superiores descartados (`R/B`) e detritos cruzando o perigeu terrestre. As janelas de injeção translunar/interplanetária devem evitar estritamente estacionamento prolongado acima de 650 km.
 
 ### 4.2 Funil de Seleção de Dados Aplicado ao Portfólio
-{selection.funnel_stages.to_markdown(index=False)}
+{disp_funnel.to_markdown(index=False)}
 
 ### 4.3 Top 10 Asteroides Recomendados para Prospecção (Ranking MCDA-TOPSIS)
-{top10_targets.to_markdown(index=False)}
+{disp_top10.to_markdown(index=False)}
 
 ### 4.4 Veículos Lançadores Qualificados (Critério Atuarial Wilson 95% & Atividade NewSpace)
-{top5_lv.to_markdown(index=False)}
+{disp_lv.to_markdown(index=False)}
 
 ### 4.5 Cenários Integrados de Subscrição Atuarial (Alvo $\\times$ Lançador $\\times$ Corredor Cislunar)
-{top8_scen.to_markdown(index=False)}
+{disp_scen.to_markdown(index=False)}
 
 ---
 
@@ -203,20 +301,20 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
 
 1. **Adoção de Arquitetura Híbrida de Dados (SQLite WAL + Parquet/DuckDB):** Manter o banco relacional indexado (`newspace_analytics.db`) como repositório transacional auditável (chaves estrangeiras ativas) acoplado a camadas colunares Parquet consultadas via DuckDB/Polars para sustentar o crescimento projetado até 2030 sem degradação de SLA no dashboard.
 2. **Estratégia em Duas Fases para Prospecção Espacial:**
-   - **Fase Alfa (Monetização de Informação Mineralógica):** Priorizar alvos no topo do ranking TOPSIS com $\\Delta v \\le 5.5\\text{{ km/s}}$ e `OCC = 0` que ainda figuram como `NAO_ESPECTROGRAFADO`, comercializando dados proprietários de composição espectral e radar para agências e consórcios de recursos espaciais.
+   - **Fase Alfa (Monetização de Informação Mineralógica):** Priorizar alvos no topo do ranking TOPSIS com $\\Delta v \\le 5.5\\text{{ km/s}}$ e `OCC = 0` que ainda figuram como `Não Medido`, comercializando dados proprietários de composição espectral e radar para agências e consórcios de recursos espaciais.
    - **Fase Beta (Missão de Extração / Demonstração ISRU):** Direcionar missões dedicadas exclusivamente a alvos já caracterizados nos complexos C (água/propelente orbital) e S/X (metais) com `OCC <= 1` e centenas de observações astrométricas.
 3. **Diretriz de Subscrição Securitária Aeroespacial:** Restringir apólices de Rating `AA`/`A` a veículos lançadores ativos com limite inferior de confiabilidade de Wilson (95%) $\\ge 95\\%$, exigindo órbita de estacionamento inicial em `LEO_VLEO` ($< 450\\text{{ km}}$) antes da queima de injeção interplanetária para minimizar tempo de exposição aos detritos de `LEO_SSO_ALTA` e `HEO_CISLUNAR`.
 """
 
     md_path.write_text(md_content, encoding="utf-8")
 
-    # Build rich styled print-ready HTML version using the team's official palette
-    html_tables_top10 = top10_targets.to_html(index=False, classes="data-table")
-    html_tables_eng = bench.engine_summary.to_html(index=False, classes="data-table")
-    html_tables_clf = bench.classification_benchmark.to_html(index=False, classes="data-table")
-    html_tables_era = trends.era_comparison.to_html(index=False, classes="data-table")
-    html_tables_funnel = selection.funnel_stages.to_html(index=False, classes="data-table")
-    html_tables_scen = top8_scen.to_html(index=False, classes="data-table")
+    # Render proportional HTML tables with clean alignment (text cols left, metrics right)
+    html_tables_eng = _render_proportional_html_table(disp_eng, right_align_from_col=1)
+    html_tables_clf = _render_proportional_html_table(disp_clf, right_align_from_col=1)
+    html_tables_era = _render_proportional_html_table(disp_era, right_align_from_col=1)
+    html_tables_funnel = _render_proportional_html_table(disp_funnel, right_align_from_col=1)
+    html_tables_top10 = _render_proportional_html_table(disp_top10, right_align_from_col=4)
+    html_tables_scen = _render_proportional_html_table(disp_scen, right_align_from_col=3)
 
     html_doc = f"""<!DOCTYPE html>
 <html lang="pt-BR">
@@ -224,6 +322,8 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relatório Técnico Executivo — Operações NewSpace</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="alternate icon" href="{FAVICON_DATA_URI}">
 <style>
   :root {{
     --bg: {PALETTE.cosmic_bg};
@@ -243,12 +343,15 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
     line-height: 1.6;
   }}
   .container {{
-    max-width: 1120px; margin: 0 auto;
-    background: rgba(22, 13, 24, 0.92);
+    max-width: 1180px; margin: 0 auto;
+    background: rgba(22, 13, 24, 0.94);
     border: 1px solid rgba(28, 163, 158, 0.35);
     border-radius: 14px;
-    padding: 40px 48px;
+    padding: 36px 44px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  }}
+  .top-bar {{
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 10px;
   }}
   .badge {{
     display: inline-block; padding: 5px 12px; border-radius: 999px;
@@ -256,13 +359,20 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
     color: var(--cyan); font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
     text-transform: uppercase;
   }}
-  h1 {{ font-size: 28px; margin: 12px 0 8px; color: #ffffff; }}
+  .nav-link {{
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 8px; text-decoration: none;
+    background: var(--card); color: #fff; border: 1px solid var(--cyan);
+    font-size: 12.5px; font-weight: 600; transition: background 0.15s;
+  }}
+  .nav-link:hover {{ background: var(--teal); }}
+  h1 {{ font-size: 27px; margin: 10px 0 8px; color: #ffffff; line-height: 1.25; }}
   h2 {{
-    font-size: 20px; margin-top: 34px; padding-bottom: 8px;
+    font-size: 19px; margin-top: 34px; padding-bottom: 8px;
     border-bottom: 2px solid var(--teal); color: var(--cyan);
   }}
-  h3 {{ font-size: 16px; color: #e2e8f0; margin-top: 22px; }}
-  .meta {{ color: var(--muted); font-size: 14px; margin-bottom: 24px; }}
+  h3 {{ font-size: 15.5px; color: #e2e8f0; margin-top: 22px; }}
+  .meta {{ color: var(--muted); font-size: 13.5px; margin-bottom: 24px; }}
   .kpi-grid {{
     display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
     gap: 16px; margin: 24px 0;
@@ -272,26 +382,41 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
     border: 1px solid rgba(28,163,158,0.4); border-radius: 10px; padding: 16px 18px;
   }}
   .kpi-val {{ font-size: 24px; font-weight: 800; color: var(--cyan); }}
-  .kpi-lbl {{ font-size: 12px; color: var(--muted); text-transform: uppercase; margin-top: 4px; }}
+  .kpi-lbl {{ font-size: 11.5px; color: var(--muted); text-transform: uppercase; margin-top: 4px; letter-spacing: 0.04em; }}
   .callout {{
     background: rgba(2, 111, 110, 0.18); border-left: 4px solid var(--cyan);
     padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 18px 0;
   }}
+  .table-wrap {{
+    width: 100%; overflow-x: auto; margin: 14px 0 24px;
+    border-radius: 8px; border: 1px solid rgba(28, 163, 158, 0.25);
+  }}
   .data-table {{
-    width: 100%; border-collapse: collapse; margin: 14px 0 22px; font-size: 13px;
+    width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto;
   }}
   .data-table th {{
-    background: var(--card); color: #fff; text-align: left; padding: 10px 12px;
-    border-bottom: 2px solid var(--cyan);
+    background: var(--card); color: #fff; padding: 11px 13px;
+    border-bottom: 2px solid var(--cyan); font-weight: 700; line-height: 1.3;
   }}
   .data-table td {{
-    padding: 9px 12px; border-bottom: 1px solid rgba(148,163,184,0.18);
+    padding: 9.5px 13px; border-bottom: 1px solid rgba(148,163,184,0.16);
+    vertical-align: middle;
   }}
-  .data-table tr:nth-child(even) {{ background: rgba(35, 20, 91, 0.28); }}
+  .data-table th.txt-col, .data-table td.txt-col {{ text-align: left; }}
+  .data-table th.num-col, .data-table td.num-col {{
+    text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap;
+  }}
+  .data-table tr:nth-child(even) {{ background: rgba(35, 20, 91, 0.26); }}
+  .data-table tr:hover {{ background: rgba(28, 163, 158, 0.12); }}
   ul li {{ margin-bottom: 8px; }}
+  @media (max-width: 768px) {{
+    .container {{ padding: 22px 18px; }}
+    h1 {{ font-size: 22px; }}
+  }}
   @media print {{
     body {{ background: #fff; color: #111; padding: 0; }}
-    .container {{ box-shadow: none; border: none; background: #fff; color: #111; padding: 16px; }}
+    .container {{ box-shadow: none; border: none; background: #fff; color: #111; padding: 16px; max-width: 100%; }}
+    .nav-link {{ display: none; }}
     h1, h2, h3, .kpi-val {{ color: #09456C !important; }}
     .data-table th {{ background: #09456C !important; color: #fff !important; -webkit-print-color-adjust: exact; }}
   }}
@@ -299,7 +424,10 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
 </head>
 <body>
 <div class="container">
-  <span class="badge">Relatório Técnico de Decisão • NewSpace Analytics</span>
+  <div class="top-bar">
+    <span class="badge">Relatório Técnico de Decisão • NewSpace Analytics</span>
+    <a class="nav-link" href="index.html">&larr; Voltar ao Dashboard Interativo</a>
+  </div>
   <h1>Benchmarking de Mineração, Tendências de Informação e Seleção Multicritério</h1>
   <div class="meta">Gerado em {now_str} • Base Empírica Auditada: {total_records:,} registros reais (NASA JPL SBDB &amp; NHATS, USSPACECOM SATCAT, Harvard-Smithsonian GCAT)</div>
 
@@ -311,12 +439,12 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
   </div>
 
   <h2>1. Benchmarking de Motores de Persistência e Mineração</h2>
-  <p>Comparativo empírico entre o modelo relacional SQLite (sem e com indexação B-Tree + WAL) e motores analíticos em memória/colunares:</p>
+  <p>Comparativo empírico entre o modelo relacional SQLite (sem e com indexação composta B-Tree + WAL + ANALYZE) e motores analíticos em memória/colunares:</p>
   {html_tables_eng}
   <h3>Modelagem Atuarial Supervisionada de Risco de Lançamento (5-Fold CV)</h3>
   {html_tables_clf}
   <div class="callout">
-    <strong>Síntese Técnica:</strong> O motor <strong>{best_eng['engine']}</strong> reduziu a latência analítica para <strong>{best_eng['latencia_total_mediana_ms']:.2f} ms</strong>, enquanto índices B-Tree aceleraram o SQLite em <strong>{sqlite_speedup:.2f}x</strong>. Na subscrição de risco, <strong>{best_clf['modelo_atuarial']}</strong> alcançou ROC-AUC de <strong>{best_clf['roc_auc']:.4f}</strong> e Brier Score de <strong>{best_clf['brier_score_calibracao']:.5f}</strong>.
+    <strong>Síntese Técnica:</strong> O motor <strong>{best_eng['engine']}</strong> reduziu a latência analítica total para <strong>{best_eng['latencia_total_mediana_ms']:.2f} ms</strong>, enquanto índices compostos cobertos aceleraram o SQLite em <strong>{sqlite_speedup:.2f}x</strong>. Na subscrição de risco, <strong>{best_clf['modelo_atuarial']}</strong> alcançou ROC-AUC de <strong>{best_clf['roc_auc']:.4f}</strong> e Brier Score de <strong>{best_clf['brier_score_calibracao']:.5f}</strong>.
   </div>
 
   <h2>2. Tendência de Produção de Informações e Gargalo Espectroscópico</h2>
@@ -337,7 +465,7 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
   <div class="callout">
     <strong>Recomendações Executivas Imediatas:</strong>
     <ol>
-      <li>Operar arquitetura híbrida <strong>SQLite WAL Indexado + Parquet/DuckDB</strong> para conciliar integridade transacional e consultas sub-15 ms.</li>
+      <li>Operar arquitetura híbrida <strong>SQLite WAL Indexado + Parquet/DuckDB/Polars</strong> para conciliar integridade transacional e consultas sub-15 ms.</li>
       <li>Priorizar sondas precursoras para alvos TOPSIS Top-10 com &Delta;v &le; 5.5 km/s e OCC = 0, capturando valor comercial da informação espectral escassa.</li>
       <li>Exigir órbita de estacionamento baixa (&lt; 450 km) antes da injeção translunar/cislunar (evitando os {cor_leo_sso['razao_detritos_pct']:.1f}% de detritos em LEO Alta e {cor_cislunar['razao_detritos_pct']:.1f}% de estágios inertes em HEO/Cislunar) e veículos com Wilson 95% &ge; 95% para concessão de Rating Atuarial AA/A.</li>
     </ol>
@@ -347,4 +475,10 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
 </html>
 """
     html_path.write_text(html_doc, encoding="utf-8")
+
+    # Sync directly to docs/relatorio.html and docs/favicon.svg when docs/ exists
+    if DOCS_DIR.exists():
+        (DOCS_DIR / "relatorio.html").write_text(html_doc, encoding="utf-8")
+        (DOCS_DIR / "favicon.svg").write_text(FAVICON_SVG, encoding="utf-8")
+
     return md_path, html_path

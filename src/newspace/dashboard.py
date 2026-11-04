@@ -13,8 +13,19 @@ from IPython.display import HTML, clear_output, display
 from plotly.subplots import make_subplots
 
 from newspace.benchmarking import BenchmarkSuiteResults
-from newspace.config import DEFAULT_CRITERIA, PALETTE, REPORTS_DIR
+from newspace.config import (
+    DEFAULT_CRITERIA,
+    DOCS_DIR,
+    FAVICON_DATA_URI,
+    FAVICON_SVG,
+    PALETTE,
+    REPORTS_DIR,
+)
 from newspace.ingestion import MinedDatasets
+from newspace.reporting import (
+    _render_proportional_html_table,
+    format_era_table_for_display,
+)
 from newspace.selection_trends import (
     SelectionDecisionOutput,
     TrendAnalysisSummary,
@@ -22,170 +33,364 @@ from newspace.selection_trends import (
 )
 
 
-def _apply_cosmic_layout(fig: go.Figure, title: str, height: int = 500) -> go.Figure:
-    """Apply the team's official NewSpace dark cosmic palette (#160D18 .. #1CA39E) consistently."""
+SHORT_STORAGE_LABELS = {
+    "Apache Parquet Colunar (Compressão ZSTD/Snappy)": "Parquet Colunar (ZSTD)",
+    "SQLite Relacional Normalizado (Sem Índices)": "SQLite (Sem Índices)",
+    "Arquivos Brutos Originais (JSON + CSV + TSV)": "Arquivos Brutos (JSON/CSV)",
+    "SQLite Relacional Normalizado + Índices B-Tree": "SQLite + Índices B-Tree",
+}
+
+SHORT_MODEL_LABELS = {
+    "Regressão Logística L2 (Baseline Atuarial)": "Reg. Logística L2",
+    "Extra Trees (200 Árvores)": "Extra Trees",
+    "Rede Neural MLP (64x32 ReLU)": "Rede Neural MLP",
+    "Random Forest (200 Árvores)": "Random Forest",
+    "HistGradientBoosting (GBDT)": "HistGradientBoosting",
+}
+
+SHORT_FACTOR_LABELS = {
+    "Taxa Histórica Prévia do Foguete (Bayes)": "Histórico Prévio do Foguete",
+    "Histórico Prévio da Agência/Operador": "Histórico Prévio do Operador",
+    "Era Tecnológica (Ano do Lançamento)": "Era Tecnológica (Ano)",
+    "Maturidade da Base de Lançamento": "Maturidade da Base",
+    "Experiência Acumulada da Agência/Operador": "Experiência do Operador",
+    "Herança de Voo Acumulada do Foguete": "Herança de Voos do Foguete",
+    "Idade Operacional do Modelo (Anos)": "Idade Operacional (Anos)",
+    "Complexidade de Dispensação (Nº de Cargas)": "Complexidade de Cargas",
+    "Regime Energético (Escape / Espaço Profundo)": "Espaço Profundo (Escape)",
+}
+
+SHORT_CORRIDOR_LABELS = {
+    "LEO_VLEO": "LEO Muito Baixa",
+    "LEO_CONSTELACAO": "LEO Constelações",
+    "LEO_SSO_ALTA": "LEO Alta / SSO",
+    "MEO_NAVEGACAO": "MEO Navegação",
+    "GEO_CINTURAO": "GEO Cinturão",
+    "HEO_CISLUNAR": "HEO / Cislunar",
+    "ESPACO_PROFUNDO": "Espaço Profundo",
+}
+
+
+def _apply_cosmic_layout(
+    fig: go.Figure,
+    title: str,
+    height: int = 460,
+    top_legend: bool = True,
+) -> go.Figure:
+    """Apply balanced margins, auto-margin axes, and official dark cosmic palette."""
+    legend_cfg = (
+        dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.03,
+            xanchor="right",
+            x=1.0,
+            bgcolor="rgba(35, 20, 91, 0.60)",
+            bordercolor="rgba(28, 163, 158, 0.35)",
+            borderwidth=1,
+            font=dict(size=11.5),
+        )
+        if top_legend
+        else dict(
+            bgcolor="rgba(35, 20, 91, 0.60)",
+            bordercolor="rgba(28, 163, 158, 0.35)",
+            borderwidth=1,
+            font=dict(size=11.5),
+        )
+    )
+
     fig.update_layout(
         title=dict(
             text=f"<b>{title}</b>",
-            font=dict(size=17, color=PALETTE.text_primary, family="Segoe UI, sans-serif"),
-            x=0.02,
+            font=dict(size=15.5, color=PALETTE.text_primary, family="Segoe UI, sans-serif"),
+            x=0.01,
+            y=0.96,
         ),
         paper_bgcolor=PALETTE.cosmic_bg,
         plot_bgcolor="#1D1226",
         font=dict(color=PALETTE.text_primary, family="Segoe UI, sans-serif", size=12),
         height=height,
-        margin=dict(l=55, r=35, t=68, b=50),
-        legend=dict(
-            bgcolor="rgba(35, 20, 91, 0.55)",
-            bordercolor="rgba(28, 163, 158, 0.35)",
-            borderwidth=1,
-            font=dict(size=11),
-        ),
+        margin=dict(l=24, r=28, t=76, b=44),
+        legend=legend_cfg,
         hoverlabel=dict(
             bgcolor=PALETTE.space_violet,
             bordercolor=PALETTE.vibrant_cyan,
             font=dict(color="#FFFFFF", size=12),
         ),
     )
-    fig.update_xaxes(gridcolor=PALETTE.grid_line, zerolinecolor=PALETTE.grid_line)
-    fig.update_yaxes(gridcolor=PALETTE.grid_line, zerolinecolor=PALETTE.grid_line)
+    fig.update_xaxes(gridcolor=PALETTE.grid_line, zerolinecolor=PALETTE.grid_line, automargin=True)
+    fig.update_yaxes(gridcolor=PALETTE.grid_line, zerolinecolor=PALETTE.grid_line, automargin=True)
     return fig
 
 
-def fig_engine_benchmark(bench: BenchmarkSuiteResults) -> go.Figure:
-    """Visual comparison of Persistence & Query Engines latency, speedup, and storage compression."""
-    fig = make_subplots(
-        rows=1,
-        cols=2,
-        subplot_titles=(
-            "Latência Mediana Total nas 3 Cargas (ms — Menor é Melhor)",
-            "Pegada de Armazenamento em Disco (MB — 122.200 Registros Reais)",
-        ),
-        horizontal_spacing=0.14,
-    )
-
-    eng = bench.engine_summary.sort_values("latencia_total_mediana_ms", ascending=True)
+def fig_engine_latency_card(bench: BenchmarkSuiteResults) -> go.Figure:
+    """Standalone crisp horizontal bar chart for Engine Latency & Speedup."""
+    eng = bench.engine_summary.sort_values("latencia_total_mediana_ms", ascending=False)
+    max_x = float(eng["latencia_total_mediana_ms"].max())
     bar_colors = [
-        PALETTE.vibrant_cyan if i == 0 else PALETTE.deep_teal if i == 1 else PALETTE.orbital_blue
-        for i in range(len(eng))
+        PALETTE.vibrant_cyan
+        if sp == eng["speedup_vs_sqlite_sem_indice"].max()
+        else PALETTE.deep_teal
+        if sp >= 2.0
+        else PALETTE.orbital_blue
+        for sp in eng["speedup_vs_sqlite_sem_indice"]
     ]
 
+    fig = go.Figure(
+        go.Bar(
+            y=eng["engine"],
+            x=eng["latencia_total_mediana_ms"],
+            orientation="h",
+            marker=dict(color=bar_colors, line=dict(color="rgba(255,255,255,0.5)", width=0.8)),
+            text=[
+                f"  {ms:.1f} ms ({sp:.1f}x)"
+                for ms, sp in zip(
+                    eng["latencia_total_mediana_ms"], eng["speedup_vs_sqlite_sem_indice"]
+                )
+            ],
+            textposition="outside",
+            cliponaxis=False,
+            hovertemplate="<b>%{y}</b><br>Latência Mediana Total: %{x:.2f} ms<extra></extra>",
+        )
+    )
+    fig.update_xaxes(range=[0, max_x * 1.32], title_text="Latência Total nas 3 Cargas (ms — Menor é Melhor)")
+    fig.update_layout(showlegend=False)
+    return _apply_cosmic_layout(
+        fig, "Desempenho de Consulta: Motores Analíticos & Relacionais", height=400
+    )
+
+
+def fig_storage_footprint_card(bench: BenchmarkSuiteResults) -> go.Figure:
+    """Standalone crisp horizontal bar chart for Disk Footprint & Compression."""
+    st = bench.storage_footprint.sort_values("tamanho_mb", ascending=False).copy()
+    st["short_label"] = st["formato_persistencia"].map(
+        lambda s: SHORT_STORAGE_LABELS.get(s, s)
+    )
+    max_mb = float(st["tamanho_mb"].max())
+    colors = [
+        PALETTE.vibrant_cyan if "Parquet" in lbl else PALETTE.deep_teal if "Sem" in lbl else PALETTE.orbital_blue
+        for lbl in st["short_label"]
+    ]
+
+    fig = go.Figure(
+        go.Bar(
+            y=st["short_label"],
+            x=st["tamanho_mb"],
+            orientation="h",
+            marker=dict(color=colors, line=dict(color="rgba(255,255,255,0.5)", width=0.8)),
+            text=[
+                f"  {mb:.2f} MB ({cr:.2f}x)"
+                for mb, cr in zip(st["tamanho_mb"], st["razao_compressao_vs_bruto"])
+            ],
+            textposition="outside",
+            cliponaxis=False,
+            hovertemplate="<b>%{y}</b><br>Espaço em Disco: %{x:.2f} MB<extra></extra>",
+        )
+    )
+    fig.update_xaxes(range=[0, max_mb * 1.34], title_text="Tamanho em Disco (MB — 122.200 Registros Reais)")
+    fig.update_layout(showlegend=False)
+    return _apply_cosmic_layout(
+        fig, "Eficiência de Armazenamento & Compressão Física", height=400
+    )
+
+
+def fig_engine_benchmark(bench: BenchmarkSuiteResults) -> go.Figure:
+    """Overlap-free 2-row figure for Jupyter Notebook displaying Latency and Storage."""
+    fig = make_subplots(
+        rows=2,
+        cols=1,
+        vertical_spacing=0.22,
+        subplot_titles=(
+            "Latência Mediana Total nas 3 Cargas Analíticas (ms — Menor é Melhor)",
+            "Pegada de Armazenamento em Disco (MB — 122.200 Registros Reais)",
+        ),
+    )
+
+    eng = bench.engine_summary.sort_values("latencia_total_mediana_ms", ascending=False)
+    max_lat = float(eng["latencia_total_mediana_ms"].max())
     fig.add_trace(
         go.Bar(
             y=eng["engine"],
             x=eng["latencia_total_mediana_ms"],
             orientation="h",
-            marker=dict(color=bar_colors, line=dict(color="#FFFFFF", width=0.6)),
+            marker=dict(color=PALETTE.vibrant_cyan, line=dict(color="rgba(255,255,255,0.5)", width=0.7)),
             text=[
-                f"{ms:.1f} ms ({sp:.1f}x)"
-                for ms, sp in zip(
-                    eng["latencia_total_mediana_ms"], eng["speedup_vs_sqlite_sem_indice"]
-                )
+                f"  {ms:.1f} ms ({sp:.1f}x)"
+                for ms, sp in zip(eng["latencia_total_mediana_ms"], eng["speedup_vs_sqlite_sem_indice"])
             ],
-            textposition="auto",
-            name="Latência Mediana (ms)",
-            hovertemplate="<b>%{y}</b><br>Latência Total: %{x:.2f} ms<extra></extra>",
+            textposition="outside",
+            cliponaxis=False,
         ),
         row=1,
         col=1,
     )
 
-    st = bench.storage_footprint.sort_values("tamanho_mb", ascending=True)
-    st_colors = [PALETTE.vibrant_cyan, PALETTE.deep_teal, PALETTE.orbital_blue, PALETTE.space_violet]
+    st = bench.storage_footprint.sort_values("tamanho_mb", ascending=False).copy()
+    st["short_label"] = st["formato_persistencia"].map(lambda s: SHORT_STORAGE_LABELS.get(s, s))
+    max_mb = float(st["tamanho_mb"].max())
     fig.add_trace(
         go.Bar(
-            y=st["formato_persistencia"],
+            y=st["short_label"],
             x=st["tamanho_mb"],
             orientation="h",
-            marker=dict(color=st_colors[: len(st)], line=dict(color="#FFFFFF", width=0.6)),
+            marker=dict(color=PALETTE.deep_teal, line=dict(color="rgba(255,255,255,0.5)", width=0.7)),
             text=[
-                f"{mb:.2f} MB ({cr:.2f}x)"
+                f"  {mb:.2f} MB ({cr:.2f}x)"
                 for mb, cr in zip(st["tamanho_mb"], st["razao_compressao_vs_bruto"])
             ],
-            textposition="auto",
-            name="Tamanho em Disco (MB)",
-            hovertemplate="<b>%{y}</b><br>Tamanho: %{x:.2f} MB<extra></extra>",
+            textposition="outside",
+            cliponaxis=False,
         ),
-        row=1,
-        col=2,
+        row=2,
+        col=1,
     )
 
+    fig.update_xaxes(range=[0, max_lat * 1.28], row=1, col=1)
+    fig.update_xaxes(range=[0, max_mb * 1.28], row=2, col=1)
     fig.update_layout(showlegend=False)
     return _apply_cosmic_layout(
         fig,
         "Benchmarking de Engenharia de Dados: Motores Analíticos & Persistência Relacional",
-        height=440,
+        height=640,
     )
 
 
-def fig_ml_benchmark(bench: BenchmarkSuiteResults) -> go.Figure:
-    """Compare Supervised Actuarial Risk Classifiers & Empirical Launch Failure Drivers."""
-    fig = make_subplots(
-        rows=1,
-        cols=2,
-        subplot_titles=(
-            "Modelos Atuariais de Sinistro (5-Fold CV em 7.418 Lançamentos)",
-            "Importância Empírica dos Fatores de Risco de Lançamento (%)",
-        ),
-        horizontal_spacing=0.16,
-    )
-
+def fig_ml_classifiers_card(bench: BenchmarkSuiteResults) -> go.Figure:
+    """Standalone crisp grouped column chart for Supervised Actuarial Risk Models."""
     clf = bench.classification_benchmark.copy()
+    clf["short_model"] = clf["modelo_atuarial"].map(lambda s: SHORT_MODEL_LABELS.get(s, s))
+
+    fig = go.Figure()
     fig.add_trace(
         go.Bar(
             name="ROC-AUC (Discriminação)",
-            x=clf["modelo_atuarial"],
+            x=clf["short_model"],
             y=clf["roc_auc"],
             marker_color=PALETTE.vibrant_cyan,
             text=[f"{v:.3f}" for v in clf["roc_auc"]],
             textposition="outside",
-        ),
-        row=1,
-        col=1,
+            cliponaxis=False,
+        )
     )
     fig.add_trace(
         go.Bar(
-            name="1 - Brier Score (Calibração Atuarial)",
-            x=clf["modelo_atuarial"],
+            name="1 - Brier (Calibração Atuarial)",
+            x=clf["short_model"],
             y=1.0 - clf["brier_score_calibracao"],
             marker_color=PALETTE.orbital_blue,
             text=[f"{1.0 - v:.3f}" for v in clf["brier_score_calibracao"]],
             textposition="outside",
+            cliponaxis=False,
+        )
+    )
+    fig.update_yaxes(range=[0.65, 1.03], title_text="Score de Validação Cruzada (5-Fold CV)")
+    fig.update_xaxes(tickangle=0)
+    fig.update_layout(barmode="group")
+    return _apply_cosmic_layout(
+        fig, "Modelos Preditivos de Sinistro Atuarial (7.418 Voos)", height=430, top_legend=True
+    )
+
+
+def fig_risk_factors_card(bench: BenchmarkSuiteResults) -> go.Figure:
+    """Standalone crisp horizontal bar chart for Empirical Launch Risk Drivers."""
+    imp = bench.feature_importances.sort_values("importancia_relativa_pct", ascending=True).copy()
+    imp["short_factor"] = imp["fator_risco"].map(lambda s: SHORT_FACTOR_LABELS.get(s, s))
+    max_imp = float(imp["importancia_relativa_pct"].max())
+
+    fig = go.Figure(
+        go.Bar(
+            y=imp["short_factor"],
+            x=imp["importancia_relativa_pct"],
+            orientation="h",
+            marker=dict(color=PALETTE.deep_teal, line=dict(color="rgba(255,255,255,0.45)", width=0.7)),
+            text=[f"  {v:.1f}%" for v in imp["importancia_relativa_pct"]],
+            textposition="outside",
+            cliponaxis=False,
+            hovertemplate="<b>%{y}</b><br>Importância Relativa: %{x:.2f}%<extra></extra>",
+        )
+    )
+    fig.update_xaxes(range=[0, max_imp * 1.25], title_text="Importância Relativa Explicativa (%)")
+    fig.update_layout(showlegend=False)
+    return _apply_cosmic_layout(
+        fig, "Importância Empírica dos Fatores de Risco de Lançamento", height=430
+    )
+
+
+def fig_ml_benchmark(bench: BenchmarkSuiteResults) -> go.Figure:
+    """Overlap-free 2-row figure for Jupyter Notebook combining Classifiers & Risk Drivers."""
+    fig = make_subplots(
+        rows=2,
+        cols=1,
+        vertical_spacing=0.20,
+        subplot_titles=(
+            "Modelos Atuariais de Sinistro (5-Fold CV em 7.418 Lançamentos)",
+            "Importância Empírica dos Fatores de Risco de Lançamento (%)",
+        ),
+    )
+
+    clf = bench.classification_benchmark.copy()
+    clf["short_model"] = clf["modelo_atuarial"].map(lambda s: SHORT_MODEL_LABELS.get(s, s))
+
+    fig.add_trace(
+        go.Bar(
+            name="ROC-AUC (Discriminação)",
+            x=clf["short_model"],
+            y=clf["roc_auc"],
+            marker_color=PALETTE.vibrant_cyan,
+            text=[f"{v:.3f}" for v in clf["roc_auc"]],
+            textposition="outside",
+            cliponaxis=False,
+        ),
+        row=1,
+        col=1,
+    )
+    fig.add_trace(
+        go.Bar(
+            name="1 - Brier (Calibração Atuarial)",
+            x=clf["short_model"],
+            y=1.0 - clf["brier_score_calibracao"],
+            marker_color=PALETTE.orbital_blue,
+            text=[f"{1.0 - v:.3f}" for v in clf["brier_score_calibracao"]],
+            textposition="outside",
+            cliponaxis=False,
         ),
         row=1,
         col=1,
     )
 
-    imp = bench.feature_importances.sort_values("importancia_relativa_pct", ascending=True)
+    imp = bench.feature_importances.sort_values("importancia_relativa_pct", ascending=True).copy()
+    imp["short_factor"] = imp["fator_risco"].map(lambda s: SHORT_FACTOR_LABELS.get(s, s))
+    max_imp = float(imp["importancia_relativa_pct"].max())
+
     fig.add_trace(
         go.Bar(
-            y=imp["fator_risco"],
+            y=imp["short_factor"],
             x=imp["importancia_relativa_pct"],
             orientation="h",
             marker_color=PALETTE.deep_teal,
-            text=[f"{v:.1f}%" for v in imp["importancia_relativa_pct"]],
-            textposition="auto",
-            name="Importância (%)",
+            text=[f"  {v:.1f}%" for v in imp["importancia_relativa_pct"]],
+            textposition="outside",
+            cliponaxis=False,
             showlegend=False,
         ),
-        row=1,
-        col=2,
+        row=2,
+        col=1,
     )
 
-    fig.update_yaxes(range=[0.65, 1.02], row=1, col=1)
-    fig.update_xaxes(tickangle=-18, row=1, col=1)
+    fig.update_yaxes(range=[0.65, 1.03], row=1, col=1)
+    fig.update_xaxes(tickangle=0, row=1, col=1)
+    fig.update_xaxes(range=[0, max_imp * 1.22], row=2, col=1)
     fig.update_layout(barmode="group")
     return _apply_cosmic_layout(
         fig,
-        "Benchmarking de Mineração Preditiva: Subscrição Atuarial Aeroespacial (Sem Vazamento Temporal)",
-        height=480,
+        "Benchmarking de Mineração Preditiva: Subscrição Atuarial Aeroespacial",
+        height=720,
+        top_legend=True,
     )
 
 
 def fig_information_trends(trends: TrendAnalysisSummary) -> go.Figure:
     """3-panel historical & projected time-series of Aerospace Information Production (1957-2030)."""
-    # Exclude partial current year 2026 from annual rate curves so incomplete year doesn't visually dip,
-    # while annotating 2026 YTD & plotting 2026-2030 full-year projection cleanly!
     hist = trends.annual_series[trends.annual_series["ano"] <= 2025].copy()
     fc = trends.forecast_2030.copy()
 
@@ -193,15 +398,14 @@ def fig_information_trends(trends: TrendAnalysisSummary) -> go.Figure:
         rows=3,
         cols=1,
         shared_xaxes=True,
-        vertical_spacing=0.08,
+        vertical_spacing=0.10,
         subplot_titles=(
-            "1. Produção Anual de Telemetria & Objetos Catalogados em Órbita (NORAD SATCAT, 1957–2025)",
-            "2. Produção Anual de Descobertas Astrométricas de Asteroides Próximos à Terra (NASA JPL SBDB)",
-            "3. Índice Composto de Produção de Informações (Base 2010 = 100) + Projeção Log-Linear 2026–2030 (IC 95%)",
+            "1. Produção Anual de Telemetria & Objetos em Órbita (NORAD SATCAT, 1957–2025)",
+            "2. Descobertas Anuais de Asteroides Próximos à Terra (NASA JPL SBDB)",
+            "3. Índice Composto de Produção de Informações (Base 2010 = 100) + Projeção 2030 (IC 95%)",
         ),
     )
 
-    # Row 1: Payloads vs Debris per year
     fig.add_trace(
         go.Scatter(
             x=hist["ano"],
@@ -220,40 +424,36 @@ def fig_information_trends(trends: TrendAnalysisSummary) -> go.Figure:
             x=hist["ano"],
             y=hist["detritos_estagios_ano"],
             mode="lines",
-            name="Detritos & Estágios Catalogados (DEB + R/B)",
+            name="Detritos & Estágios (DEB + R/B)",
             line=dict(color=PALETTE.accent_gold, width=1.8, dash="dot"),
         ),
         row=1,
         col=1,
     )
 
-    # Row 2: Annual NEO discoveries
     fig.add_trace(
         go.Bar(
             x=hist["ano"],
             y=hist["neos_descobertos_ano"],
-            name="NEOs Descobertos / Ano (NASA JPL)",
+            name="NEOs Descobertos / Ano",
             marker_color=PALETTE.deep_teal,
         ),
         row=2,
         col=1,
     )
 
-    # Row 3: Composite Information Index + 2026-2030 Forecast with 95% CI band
     fig.add_trace(
         go.Scatter(
             x=hist["ano"],
             y=hist["indice_producao_informacao"],
             mode="lines+markers",
             marker=dict(size=4),
-            name="Índice Empírico Observado (1957–2025)",
+            name="Índice Observado (1957–2025)",
             line=dict(color=PALETTE.vibrant_cyan, width=2.8),
         ),
         row=3,
         col=1,
     )
-
-    # Confidence band
     fig.add_trace(
         go.Scatter(
             x=list(fc["ano"]) + list(fc["ano"])[::-1],
@@ -261,7 +461,7 @@ def fig_information_trends(trends: TrendAnalysisSummary) -> go.Figure:
             fill="toself",
             fillcolor="rgba(28, 163, 158, 0.22)",
             line=dict(color="rgba(255,255,255,0)"),
-            name="Intervalo de Predição 95% (2026–2030)",
+            name="IC 95% (2026–2030)",
             hoverinfo="skip",
         ),
         row=3,
@@ -273,7 +473,7 @@ def fig_information_trends(trends: TrendAnalysisSummary) -> go.Figure:
             y=[float(hist["indice_producao_informacao"].iloc[-1])]
             + list(fc["indice_info_projetado"]),
             mode="lines+markers",
-            name="Projeção Log-Linear NewSpace (2026–2030)",
+            name="Projeção Log-Linear (2026–2030)",
             line=dict(color=PALETTE.accent_mint, width=2.6, dash="dash"),
             marker=dict(size=7, symbol="diamond"),
         ),
@@ -281,54 +481,110 @@ def fig_information_trends(trends: TrendAnalysisSummary) -> go.Figure:
         col=1,
     )
 
-    # Structural NewSpace inflection vertical line (2015: First orbital booster landing & reusable era)
     for r in (1, 2, 3):
-        fig.add_vline(
-            x=2015,
-            line_dash="dash",
-            line_color="#A78BFA",
-            line_width=1.4,
-            row=r,
-            col=1,
-        )
+        fig.add_vline(x=2015, line_dash="dash", line_color="#A78BFA", line_width=1.4, row=r, col=1)
 
     fig.add_annotation(
         x=2015,
-        y=float(hist["cargas_uteis_pay_ano"].max()) * 0.88,
+        y=float(hist["cargas_uteis_pay_ano"].max()) * 0.86,
         text="Inflexão NewSpace (2015)<br>Reusabilidade & Megaconstelações",
         showarrow=True,
         arrowhead=2,
-        ax=-85,
+        ax=-90,
         ay=-15,
         font=dict(color="#E9D5FF", size=11),
-        bgcolor="rgba(35, 20, 91, 0.85)",
+        bgcolor="rgba(35, 20, 91, 0.88)",
         bordercolor="#A78BFA",
         row=1,
         col=1,
     )
 
-    return _apply_cosmic_layout(
+    out = _apply_cosmic_layout(
         fig,
         "Tendência Empírica de Produção de Informações Espaciais e Projeção 2030",
-        height=760,
+        height=790,
+        top_legend=True,
+    )
+    out.update_layout(margin=dict(l=40, r=28, t=105, b=45))
+    return out
+
+
+def fig_observability_card(trends: TrendAnalysisSummary) -> go.Figure:
+    """Standalone card: Empirical Law of Information Volume vs NASA Orbit Uncertainty (OCC)."""
+    occ = trends.observability_vs_uncertainty
+    max_y = float(occ["mediana_observacoes"].max())
+    fig = go.Figure(
+        go.Bar(
+            x=[f"OCC {int(c)}" for c in occ["codigo_incerteza_occ_int"]],
+            y=occ["mediana_observacoes"],
+            marker=dict(
+                color=occ["codigo_incerteza_occ_int"],
+                colorscale=[
+                    [0.0, PALETTE.vibrant_cyan],
+                    [0.5, PALETTE.orbital_blue],
+                    [1.0, PALETTE.accent_coral],
+                ],
+            ),
+            text=[f"{int(v)}" for v in occ["mediana_observacoes"]],
+            textposition="outside",
+            cliponaxis=False,
+            hovertemplate="<b>%{x}</b><br>Mediana de Observações: %{y}<extra></extra>",
+        )
+    )
+    fig.update_yaxes(range=[0, max_y * 1.18], title_text="Mediana de Observações Astrométricas")
+    fig.update_xaxes(title_text="Código de Incerteza Orbital NASA (0 = Órbita Certa, 9 = Incerta)")
+    fig.update_layout(showlegend=False)
+    return _apply_cosmic_layout(
+        fig, "Lei Informação × Risco: Observações por Nível de Incerteza OCC", height=430
+    )
+
+
+def fig_corridors_card(datasets: MinedDatasets) -> go.Figure:
+    """Standalone card: Active Satellites vs Debris across the 7 physical Orbital Corridors."""
+    cor = datasets.corridors.copy()
+    cor["short_corridor"] = cor["id_corredor"].map(lambda c: SHORT_CORRIDOR_LABELS.get(c, c))
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=cor["short_corridor"],
+            y=cor["satelites_ativos"],
+            name="Satélites Ativos Manobráveis",
+            marker_color=PALETTE.vibrant_cyan,
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=cor["short_corridor"],
+            y=cor["detritos_e_estagios_orbita"],
+            name="Detritos & Estágios Inertes (DEB + R/B)",
+            marker_color=PALETTE.accent_coral,
+        )
+    )
+    fig.update_xaxes(tickangle=-18)
+    fig.update_yaxes(title_text="Objetos Atualmente em Órbita (NORAD)")
+    fig.update_layout(barmode="stack")
+    return _apply_cosmic_layout(
+        fig, "Bifurcação de Tráfego nos Corredores Orbitais", height=430, top_legend=True
     )
 
 
 def fig_observability_and_corridors(
     datasets: MinedDatasets, trends: TrendAnalysisSummary
 ) -> go.Figure:
-    """Dual diagnostic: (1) Information Volume vs Orbit Uncertainty OCC; (2) Orbital Corridor Congestion."""
+    """Overlap-free 2-row figure for Jupyter Notebook showing OCC Law & Corridor Congestion."""
     fig = make_subplots(
-        rows=1,
-        cols=2,
+        rows=2,
+        cols=1,
+        vertical_spacing=0.22,
         subplot_titles=(
-            "Lei Informação × Risco: Mediana de Observações por Incerteza OCC",
-            "Tráfego Real nos Corredores Orbitais: Satélites Ativos vs Detritos",
+            "Lei Informação × Risco: Mediana de Observações por Incerteza OCC (NASA JPL)",
+            "Tráfego Real nos Corredores Orbitais: Satélites Ativos vs Detritos Inertes",
         ),
-        horizontal_spacing=0.14,
     )
 
     occ = trends.observability_vs_uncertainty
+    max_y = float(occ["mediana_observacoes"].max())
     fig.add_trace(
         go.Bar(
             x=[f"OCC {int(c)}" for c in occ["codigo_incerteza_occ_int"]],
@@ -343,41 +599,44 @@ def fig_observability_and_corridors(
             ),
             text=[f"{int(v)}" for v in occ["mediana_observacoes"]],
             textposition="outside",
-            name="Mediana de Observações Astrométricas",
-            hovertemplate="<b>%{x}</b><br>Mediana de Observações: %{y}<extra></extra>",
+            cliponaxis=False,
+            showlegend=False,
         ),
         row=1,
         col=1,
     )
 
     cor = datasets.corridors.copy()
+    cor["short_corridor"] = cor["id_corredor"].map(lambda c: SHORT_CORRIDOR_LABELS.get(c, c))
     fig.add_trace(
         go.Bar(
-            x=cor["id_corredor"],
+            x=cor["short_corridor"],
             y=cor["satelites_ativos"],
             name="Satélites Ativos Manobráveis",
             marker_color=PALETTE.vibrant_cyan,
         ),
-        row=1,
-        col=2,
+        row=2,
+        col=1,
     )
     fig.add_trace(
         go.Bar(
-            x=cor["id_corredor"],
+            x=cor["short_corridor"],
             y=cor["detritos_e_estagios_orbita"],
             name="Detritos & Estágios Inertes (DEB + R/B)",
             marker_color=PALETTE.accent_coral,
         ),
-        row=1,
-        col=2,
+        row=2,
+        col=1,
     )
 
-    fig.update_xaxes(tickangle=-25, row=1, col=2)
+    fig.update_yaxes(range=[0, max_y * 1.18], row=1, col=1)
+    fig.update_xaxes(tickangle=0, row=2, col=1)
     fig.update_layout(barmode="stack")
     return _apply_cosmic_layout(
         fig,
-        "Qualidade Informacional Astrométrica & Bifurcação de Detritos nos Corredores Orbitais",
-        height=460,
+        "Qualidade Informacional Astrométrica & Bifurcação nos Corredores Orbitais",
+        height=700,
+        top_legend=True,
     )
 
 
@@ -388,6 +647,7 @@ def fig_topsis_prospecting_map(selection: SelectionDecisionOutput) -> go.Figure:
         return _apply_cosmic_layout(go.Figure(), "Nenhum Asteroide Atendeu aos Filtros Selecionados", 420)
 
     sizes = np.clip(np.log1p(cand["diametro_fisico_ref_m"]) * 4.2, 8.0, 32.0)
+    spec_clean = cand["classe_espectral"].replace("NAO_ESPECTROGRAFADO", "Não Medido")
 
     fig = go.Figure()
     fig.add_trace(
@@ -412,7 +672,7 @@ def fig_topsis_prospecting_map(selection: SelectionDecisionOutput) -> go.Figure:
                 [
                     cand["ranking_topsis"],
                     cand["nome_completo"],
-                    cand["classe_espectral"],
+                    spec_clean,
                     np.round(cand["diametro_fisico_ref_m"], 1),
                     cand["num_observacoes"],
                     cand["codigo_incerteza_occ"],
@@ -422,7 +682,7 @@ def fig_topsis_prospecting_map(selection: SelectionDecisionOutput) -> go.Figure:
             hovertemplate=(
                 "<b>#%{customdata[0]} — %{customdata[1]}</b><br>"
                 "Δv Mínimo: %{x:.3f} km/s | Duração: %{y:.0f} dias<br>"
-                "Classe Espectral: %{customdata[2]} | Diâmetro Ref: %{customdata[3]} m<br>"
+                "Espectro: %{customdata[2]} | Diâmetro Ref.: %{customdata[3]} m<br>"
                 "Observações NASA: %{customdata[4]} (OCC %{customdata[5]})<br>"
                 "<b>Score TOPSIS: %{customdata[6]:.2f}</b><extra></extra>"
             ),
@@ -446,10 +706,11 @@ def fig_topsis_prospecting_map(selection: SelectionDecisionOutput) -> go.Figure:
 
     fig.update_xaxes(title_text="Δv Mínimo de Missão NASA NHATS (km/s — Menor = Mais Eficiente)")
     fig.update_yaxes(title_text="Duração da Missão de Menor Δv (Dias)")
+    fig.update_layout(showlegend=False)
     return _apply_cosmic_layout(
         fig,
         f"Mapa de Decisão Multicritério TOPSIS — Top {len(cand)} Alvos Qualificados (NASA JPL NHATS)",
-        height=500,
+        height=490,
     )
 
 
@@ -477,7 +738,7 @@ def fig_actuarial_scenarios_matrix(selection: SelectionDecisionOutput) -> go.Fig
                 x=sub["score_risco_combinado"],
                 y=sub["score_topsis"],
                 mode="markers",
-                name=f"Rating Atuarial {rating}",
+                name=f"Rating {rating}",
                 marker=dict(
                     size=13,
                     color=rating_colors[rating],
@@ -508,7 +769,8 @@ def fig_actuarial_scenarios_matrix(selection: SelectionDecisionOutput) -> go.Fig
     return _apply_cosmic_layout(
         fig,
         "Matriz Integrada de Subscrição Atuarial: Retorno Técnico TOPSIS vs Risco Operacional",
-        height=460,
+        height=470,
+        top_legend=True,
     )
 
 
@@ -620,19 +882,22 @@ def create_notebook_interactive_cockpit(datasets: MinedDatasets) -> widgets.VBox
             display(HTML(kpi_html))
             fig_topsis_prospecting_map(res).show()
             if n_q > 0:
-                cols_show = [
-                    "ranking_topsis",
-                    "pdes",
-                    "nome_completo",
-                    "classe_espectral",
-                    "min_delta_v_kms",
-                    "duracao_min_dv_dias",
-                    "diametro_fisico_ref_m",
-                    "num_observacoes",
-                    "codigo_incerteza_occ",
-                    "score_topsis",
-                ]
-                display(res.ranked_asteroids[cols_show].head(12))
+                top_show = res.ranked_asteroids.head(12).copy()
+                disp_tbl = pd.DataFrame(
+                    {
+                        "Rank": top_show["ranking_topsis"],
+                        "Designação": top_show["pdes"],
+                        "Asteroide (NASA JPL)": top_show["nome_completo"],
+                        "Espectro": top_show["classe_espectral"].replace("NAO_ESPECTROGRAFADO", "Não Medido"),
+                        "Δv Mín. (km/s)": top_show["min_delta_v_kms"],
+                        "Duração (d)": top_show["duracao_min_dv_dias"].astype(int),
+                        "Diâm. Ref. (m)": top_show["diametro_fisico_ref_m"].round(1),
+                        "Obs.": top_show["num_observacoes"].astype(int),
+                        "OCC": top_show["codigo_incerteza_occ"].astype(int),
+                        "Score TOPSIS": top_show["score_topsis"],
+                    }
+                )
+                display(disp_tbl)
 
     for ctrl in [sl_dv, sl_dur, sl_occ, sl_obs, sl_diam, chk_spec, w_astro, w_info, w_scale, w_traj]:
         ctrl.observe(_refresh, names="value")
@@ -660,18 +925,46 @@ def export_standalone_custom_dashboard(
     selection: SelectionDecisionOutput,
     reports_dir: Path = REPORTS_DIR,
 ) -> Path:
-    """Export interactive, client-side customizable standalone HTML5 cockpit (zero backend needed)."""
+    """Export interactive, overlap-free, proportionally styled HTML5 cockpit + sync to docs/."""
     reports_dir.mkdir(parents=True, exist_ok=True)
     out_path = reports_dir / "newspace_dashboard.html"
+    (reports_dir / "favicon.svg").write_text(FAVICON_SVG, encoding="utf-8")
 
-    # Serialize static figures to Plotly JSON specs
-    f_eng_json = fig_engine_benchmark(bench).to_json()
-    f_ml_json = fig_ml_benchmark(bench).to_json()
+    # Dedicated individual proportional figures for responsive 2-column CSS grid
+    f_eng_lat_json = fig_engine_latency_card(bench).to_json()
+    f_eng_sto_json = fig_storage_footprint_card(bench).to_json()
+    f_ml_clf_json = fig_ml_classifiers_card(bench).to_json()
+    f_ml_imp_json = fig_risk_factors_card(bench).to_json()
     f_tr_json = fig_information_trends(trends).to_json()
-    f_ob_json = fig_observability_and_corridors(datasets, trends).to_json()
+    f_obs_json = fig_observability_card(trends).to_json()
+    f_cor_json = fig_corridors_card(datasets).to_json()
     f_ac_json = fig_actuarial_scenarios_matrix(selection).to_json()
 
-    # Prepare compact JSON of all 7,169 real NASA NHATS targets for instant client-side TOPSIS customization!
+    # Formatted proportional Era Comparison HTML table for Tab 2
+    era_html_table = _render_proportional_html_table(
+        format_era_table_for_display(trends.era_comparison), right_align_from_col=1
+    )
+
+    # Formatted Actuarial Scenarios HTML table for Tab 4
+    raw_scen = selection.actuarial_scenarios.head(12)
+    scen_disp = pd.DataFrame(
+        {
+            "Cenário": raw_scen["id_cenario"],
+            "Asteroide Alvo": raw_scen["nome_asteroide"],
+            "Veículo Lançador": raw_scen["modelo_veiculo"],
+            "Corredor": raw_scen["id_corredor_transito"].map(
+                lambda c: SHORT_CORRIDOR_LABELS.get(c, c)
+            ),
+            "Δv (km/s)": raw_scen["min_delta_v_kms"].map(lambda v: f"{v:.3f}"),
+            "Wilson 95%": raw_scen["confiabilidade_wilson_pct"].map(lambda v: f"{v:.2f}%"),
+            "Score TOPSIS": raw_scen["score_topsis"].map(lambda v: f"{v:.2f}"),
+            "Risco Combinado": raw_scen["score_risco_combinado"].map(lambda v: f"{v:.2f}"),
+            "Rating": raw_scen["rating_atuarial"],
+        }
+    )
+    scen_html_table = _render_proportional_html_table(scen_disp, right_align_from_col=4)
+
+    # Prepare compact JSON of all 7,169 real NASA NHATS targets for instant client-side TOPSIS customization
     nhats_all = datasets.asteroids[datasets.asteroids["acessivel_nhats"] == 1].copy()
     nhats_all = nhats_all.dropna(
         subset=["min_delta_v_kms", "duracao_min_dv_dias", "diametro_fisico_ref_m"]
@@ -679,12 +972,14 @@ def export_standalone_custom_dashboard(
 
     client_records = []
     for _, r in nhats_all.iterrows():
+        raw_sp = str(r["classe_espectral"])
         client_records.append(
             {
                 "spkid": int(r["spkid"]),
                 "pdes": str(r["pdes"]),
                 "name": str(r["nome_completo"]),
-                "spec": str(r["classe_espectral"]),
+                "spec": "Não Medido" if raw_sp == "NAO_ESPECTROGRAFADO" else raw_sp,
+                "has_spec": 0 if raw_sp == "NAO_ESPECTROGRAFADO" else 1,
                 "grp": str(r["grupo_mineralogico"]),
                 "dv": round(float(r["min_delta_v_kms"]), 3),
                 "dur": int(r["duracao_min_dv_dias"]),
@@ -696,10 +991,6 @@ def export_standalone_custom_dashboard(
                 "traj": int(r["trajetorias_viaveis"]) if pd.notna(r["trajetorias_viaveis"]) else 1,
             }
         )
-
-    qual_lv_records = selection.qualified_launchers.head(5)[
-        ["modelo_veiculo", "agencia_principal", "total_lancamentos", "taxa_sucesso_pct", "wilson_lower_95_pct"]
-    ].to_dict(orient="records")
 
     total_records = (
         len(datasets.satellites)
@@ -717,6 +1008,8 @@ def export_standalone_custom_dashboard(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NewSpace Analytics Cockpit — Benchmarking, Tendências & Decisão Multicritério</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="alternate icon" href="{FAVICON_DATA_URI}">
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <style>
   :root {{
@@ -734,14 +1027,24 @@ def export_standalone_custom_dashboard(
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   }}
   header {{
-    background: linear-gradient(90deg, var(--bg) 0%, var(--violet) 45%, var(--blue) 100%);
+    background: linear-gradient(90deg, var(--bg) 0%, var(--violet) 48%, var(--blue) 100%);
     border-bottom: 2px solid var(--cyan);
-    padding: 18px 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;
   }}
-  .brand-title {{ font-size: 21px; font-weight: 800; letter-spacing: 0.02em; }}
-  .brand-sub {{ font-size: 12px; color: #cbd5e1; margin-top: 3px; }}
+  .brand-wrap {{ display: flex; align-items: center; gap: 14px; }}
+  .brand-logo {{ width: 42px; height: 42px; flex-shrink: 0; }}
+  .brand-title {{ font-size: 20px; font-weight: 800; letter-spacing: 0.02em; }}
+  .brand-sub {{ font-size: 12px; color: #cbd5e1; margin-top: 2px; }}
+  .header-right {{ display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }}
   .palette-pills {{ display: flex; gap: 6px; align-items: center; font-size: 11px; color: #cbd5e1; }}
-  .swatch {{ width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.4); }}
+  .swatch {{ width: 15px; height: 15px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.4); }}
+  .report-btn {{
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(28, 163, 158, 0.20); color: #fff; border: 1px solid var(--cyan);
+    padding: 8px 15px; border-radius: 8px; text-decoration: none; font-size: 12.5px; font-weight: 700;
+    transition: all 0.15s;
+  }}
+  .report-btn:hover {{ background: var(--cyan); color: #06181c; }}
   nav.tabs {{
     display: flex; gap: 8px; padding: 12px 28px; background: #1c1124; border-bottom: 1px solid #2d223b; flex-wrap: wrap;
   }}
@@ -760,11 +1063,20 @@ def export_standalone_custom_dashboard(
     border: 1px solid rgba(28,163,158,0.42); border-radius: 10px; padding: 14px 18px;
   }}
   .kpi .lbl {{ font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }}
-  .kpi .val {{ font-size: 24px; font-weight: 800; color: var(--cyan); margin-top: 4px; }}
-  .kpi .hint {{ font-size: 11px; color: #cbd5e1; margin-top: 3px; }}
+  .kpi .val {{ font-size: 23px; font-weight: 800; color: var(--cyan); margin-top: 4px; }}
+  .kpi .hint {{ font-size: 11.5px; color: #cbd5e1; margin-top: 3px; }}
+  .grid-2 {{
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 20px; margin-bottom: 20px;
+  }}
+  @media (max-width: 640px) {{ .grid-2 {{ grid-template-columns: 1fr; }} }}
   .chart-card {{
     background: #1D1226; border: 1px solid rgba(28,163,158,0.28); border-radius: 12px;
-    padding: 12px; margin-bottom: 20px; box-shadow: 0 10px 26px rgba(0,0,0,0.35);
+    padding: 14px 16px; margin-bottom: 20px; box-shadow: 0 10px 26px rgba(0,0,0,0.35);
+    overflow: hidden;
+  }}
+  .grid-2 .chart-card {{ margin-bottom: 0; }}
+  .section-subtitle {{
+    margin: 4px 4px 12px; color: var(--cyan); font-size: 15.5px; font-weight: 700;
   }}
   .sim-layout {{ display: grid; grid-template-columns: 360px 1fr; gap: 20px; align-items: start; }}
   @media (max-width: 1024px) {{ .sim-layout {{ grid-template-columns: 1fr; }} }}
@@ -784,25 +1096,42 @@ def export_standalone_custom_dashboard(
     border-radius: 8px; font-weight: 800; cursor: pointer; margin-top: 8px; font-size: 13px;
   }}
   .action-btn.secondary {{ background: var(--blue); color: #fff; border: 1px solid var(--cyan); }}
-  table.ranking-tbl {{ width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 8px; }}
-  table.ranking-tbl th {{ background: var(--blue); color: #fff; padding: 9px 10px; text-align: left; position: sticky; top: 0; }}
-  table.ranking-tbl td {{ padding: 8px 10px; border-bottom: 1px solid rgba(148,163,184,0.16); }}
-  table.ranking-tbl tr:hover {{ background: rgba(28,163,158,0.14); }}
+  .table-wrap {{
+    width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid rgba(28, 163, 158, 0.22);
+  }}
+  table.ranking-tbl, table.data-table {{ width: 100%; border-collapse: collapse; font-size: 12.8px; }}
+  table.ranking-tbl th, table.data-table th {{
+    background: var(--blue); color: #fff; padding: 10px 12px; font-weight: 700; position: sticky; top: 0;
+    border-bottom: 2px solid var(--cyan);
+  }}
+  table.ranking-tbl td, table.data-table td {{
+    padding: 8.5px 12px; border-bottom: 1px solid rgba(148,163,184,0.16);
+  }}
+  .txt-col {{ text-align: left; }}
+  .num-col {{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }}
+  table.ranking-tbl tr:nth-child(even), table.data-table tr:nth-child(even) {{ background: rgba(35,20,91,0.22); }}
+  table.ranking-tbl tr:hover, table.data-table tr:hover {{ background: rgba(28,163,158,0.14); }}
 </style>
 </head>
 <body>
 <header>
-  <div>
-    <div class="brand-title">NEWSPACE DECISION COCKPIT • MINERAÇÃO DE DADOS &amp; RISCO ATUARIAL</div>
-    <div class="brand-sub">Dados 100% Reais Auditados (NASA JPL SBDB &amp; NHATS • USSPACECOM NORAD SATCAT • Harvard-Smithsonian GCAT)</div>
+  <div class="brand-wrap">
+    <div class="brand-logo">{FAVICON_SVG}</div>
+    <div>
+      <div class="brand-title">NEWSPACE ANALYTICS COCKPIT • MINERAÇÃO &amp; RISCO ATUARIAL</div>
+      <div class="brand-sub">Dados 100% Reais Auditados (NASA JPL SBDB &amp; NHATS • USSPACECOM NORAD SATCAT • Harvard-Smithsonian GCAT)</div>
+    </div>
   </div>
-  <div class="palette-pills">
-    <span>Identidade Visual NewSpace:</span>
-    <span class="swatch" style="background:#160D18" title="#160D18"></span>
-    <span class="swatch" style="background:#23145B" title="#23145B"></span>
-    <span class="swatch" style="background:#09456C" title="#09456C"></span>
-    <span class="swatch" style="background:#026F6E" title="#026F6E"></span>
-    <span class="swatch" style="background:#1CA39E" title="#1CA39E"></span>
+  <div class="header-right">
+    <div class="palette-pills">
+      <span>Paleta:</span>
+      <span class="swatch" style="background:#160D18" title="#160D18"></span>
+      <span class="swatch" style="background:#23145B" title="#23145B"></span>
+      <span class="swatch" style="background:#09456C" title="#09456C"></span>
+      <span class="swatch" style="background:#026F6E" title="#026F6E"></span>
+      <span class="swatch" style="background:#1CA39E" title="#1CA39E"></span>
+    </div>
+    <a class="report-btn" href="relatorio.html">Relatório Técnico Executivo &rarr;</a>
   </div>
 </header>
 
@@ -881,17 +1210,27 @@ def export_standalone_custom_dashboard(
 
       <div>
         <div class="chart-card"><div id="plot-sim-scatter" style="height:470px;"></div></div>
-        <div class="chart-card" style="max-height:430px; overflow-y:auto;">
-          <h3 style="margin:6px 8px 10px; color:var(--cyan); font-size:15px;">Top 20 Asteroides Próximos à Terra Ranqueados em Tempo Real (NASA JPL NHATS)</h3>
-          <table class="ranking-tbl">
-            <thead>
-              <tr>
-                <th>Rank</th><th>Designação</th><th>Nome Oficial NASA</th><th>Espectro</th>
-                <th>Δv (km/s)</th><th>Duração (d)</th><th>Diâm. Ref (m)</th><th>Obs.</th><th>OCC</th><th>Score TOPSIS</th>
-              </tr>
-            </thead>
-            <tbody id="tbl-sim-body"></tbody>
-          </table>
+        <div class="chart-card">
+          <div class="section-subtitle">Top 20 Asteroides Próximos à Terra Ranqueados em Tempo Real (NASA JPL NHATS)</div>
+          <div class="table-wrap" style="max-height:410px; overflow-y:auto;">
+            <table class="ranking-tbl">
+              <thead>
+                <tr>
+                  <th class="txt-col">Rank</th>
+                  <th class="txt-col">Designação</th>
+                  <th class="txt-col">Asteroide Oficial (NASA JPL)</th>
+                  <th class="txt-col">Espectro</th>
+                  <th class="num-col">Δv Mín. (km/s)</th>
+                  <th class="num-col">Duração (d)</th>
+                  <th class="num-col">Diâm. Ref. (m)</th>
+                  <th class="num-col">Obs.</th>
+                  <th class="num-col">OCC</th>
+                  <th class="num-col">Score TOPSIS</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-sim-body"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -900,7 +1239,14 @@ def export_standalone_custom_dashboard(
   <!-- TAB 2: INFORMATION PRODUCTION TRENDS -->
   <section id="tab-trends" class="tab-panel">
     <div class="chart-card"><div id="plot-trends"></div></div>
-    <div class="chart-card"><div id="plot-obs-corridors"></div></div>
+    <div class="grid-2">
+      <div class="chart-card"><div id="plot-obs-law"></div></div>
+      <div class="chart-card"><div id="plot-corridors-tr"></div></div>
+    </div>
+    <div class="chart-card">
+      <div class="section-subtitle">Comparativo Estrutural de Produção de Informações entre as Eras Espaciais (1957–2025)</div>
+      {era_html_table}
+    </div>
   </section>
 
   <!-- TAB 3: DATA MINING BENCHMARK -->
@@ -908,35 +1254,54 @@ def export_standalone_custom_dashboard(
     <div class="kpi-row">
       <div class="kpi"><div class="lbl">Motor Analítico Mais Rápido</div><div class="val" style="font-size:19px;">{best_eng['engine']}</div><div class="hint">Latência total: {best_eng['latencia_total_mediana_ms']:.2f} ms ({best_eng['speedup_vs_sqlite_sem_indice']:.1f}x speedup)</div></div>
       <div class="kpi"><div class="lbl">Melhor Clusterização NHATS</div><div class="val" style="font-size:19px;">{bench.clustering_benchmark.iloc[0]['algoritmo']}</div><div class="hint">Silhouette: {bench.clustering_benchmark.iloc[0]['silhouette_score']:.4f}</div></div>
-      <div class="kpi"><div class="lbl">Melhor Classificador Atuarial</div><div class="val" style="font-size:19px;">{bench.classification_benchmark.iloc[0]['modelo_atuarial']}</div><div class="hint">ROC-AUC: {bench.classification_benchmark.iloc[0]['roc_auc']:.4f} | Brier: {bench.classification_benchmark.iloc[0]['brier_score_calibracao']:.5f}</div></div>
+      <div class="kpi"><div class="lbl">Melhor Classificador Atuarial</div><div class="val" style="font-size:19px;">{SHORT_MODEL_LABELS.get(bench.classification_benchmark.iloc[0]['modelo_atuarial'], bench.classification_benchmark.iloc[0]['modelo_atuarial'])}</div><div class="hint">ROC-AUC: {bench.classification_benchmark.iloc[0]['roc_auc']:.4f} | Brier: {bench.classification_benchmark.iloc[0]['brier_score_calibracao']:.5f}</div></div>
     </div>
-    <div class="chart-card"><div id="plot-eng-bench"></div></div>
-    <div class="chart-card"><div id="plot-ml-bench"></div></div>
+    <div class="grid-2">
+      <div class="chart-card"><div id="plot-eng-lat"></div></div>
+      <div class="chart-card"><div id="plot-eng-sto"></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="chart-card"><div id="plot-ml-clf"></div></div>
+      <div class="chart-card"><div id="plot-ml-imp"></div></div>
+    </div>
   </section>
 
   <!-- TAB 4: ORBITAL CORRIDORS & ACTUARIAL MATRIX -->
   <section id="tab-actuarial" class="tab-panel">
-    <div class="chart-card"><div id="plot-actuarial-mat"></div></div>
+    <div class="grid-2">
+      <div class="chart-card"><div id="plot-actuarial-mat"></div></div>
+      <div class="chart-card"><div id="plot-corridors-act"></div></div>
+    </div>
+    <div class="chart-card">
+      <div class="section-subtitle">Cenários Integrados de Subscrição Atuarial (Alvo × Veículo × Corredor Cislunar)</div>
+      {scen_html_table}
+    </div>
   </section>
 </main>
 
 <script>
 const NHATS_DATA = {json.dumps(client_records, ensure_ascii=False)};
-const QUAL_LVS = {json.dumps(qual_lv_records, ensure_ascii=False)};
-const SPEC_ENG = {f_eng_json};
-const SPEC_ML = {f_ml_json};
+const SPEC_ENG_LAT = {f_eng_lat_json};
+const SPEC_ENG_STO = {f_eng_sto_json};
+const SPEC_ML_CLF = {f_ml_clf_json};
+const SPEC_ML_IMP = {f_ml_imp_json};
 const SPEC_TR = {f_tr_json};
-const SPEC_OB = {f_ob_json};
+const SPEC_OBS = {f_obs_json};
+const SPEC_COR = {f_cor_json};
 const SPEC_AC = {f_ac_json};
 
 let currentRanked = [];
 
 function renderStaticPlots() {{
   const cfg = {{responsive: true, displaylogo: false}};
-  Plotly.newPlot('plot-eng-bench', SPEC_ENG.data, SPEC_ENG.layout, cfg);
-  Plotly.newPlot('plot-ml-bench', SPEC_ML.data, SPEC_ML.layout, cfg);
+  Plotly.newPlot('plot-eng-lat', SPEC_ENG_LAT.data, SPEC_ENG_LAT.layout, cfg);
+  Plotly.newPlot('plot-eng-sto', SPEC_ENG_STO.data, SPEC_ENG_STO.layout, cfg);
+  Plotly.newPlot('plot-ml-clf', SPEC_ML_CLF.data, SPEC_ML_CLF.layout, cfg);
+  Plotly.newPlot('plot-ml-imp', SPEC_ML_IMP.data, SPEC_ML_IMP.layout, cfg);
   Plotly.newPlot('plot-trends', SPEC_TR.data, SPEC_TR.layout, cfg);
-  Plotly.newPlot('plot-obs-corridors', SPEC_OB.data, SPEC_OB.layout, cfg);
+  Plotly.newPlot('plot-obs-law', SPEC_OBS.data, SPEC_OBS.layout, cfg);
+  Plotly.newPlot('plot-corridors-tr', SPEC_COR.data, SPEC_COR.layout, cfg);
+  Plotly.newPlot('plot-corridors-act', SPEC_COR.data, SPEC_COR.layout, cfg);
   Plotly.newPlot('plot-actuarial-mat', SPEC_AC.data, SPEC_AC.layout, cfg);
 }}
 
@@ -978,7 +1343,7 @@ function recomputeTOPSIS() {{
     d.obs >= minObs &&
     d.diam >= minDiam &&
     (grpFilter === 'ALL' ||
-     (grpFilter === 'KNOWN' && d.spec !== 'NAO_ESPECTROGRAFADO') ||
+     (grpFilter === 'KNOWN' && d.has_spec === 1) ||
      d.grp.startsWith(grpFilter))
   );
 
@@ -990,7 +1355,7 @@ function recomputeTOPSIS() {{
   if (cand.length === 0) {{
     document.getElementById('kpi-top1-name').textContent = 'Nenhum candidato';
     document.getElementById('kpi-top1-meta').textContent = 'Relaxe os filtros ao lado';
-    tbody.innerHTML = '<tr><td colspan="10">Nenhum asteroide atende simultaneamente às restrições atuais.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="txt-col">Nenhum asteroide atende simultaneamente às restrições atuais.</td></tr>';
     Plotly.purge('plot-sim-scatter');
     currentRanked = [];
     return;
@@ -1004,7 +1369,7 @@ function recomputeTOPSIS() {{
       0.35 * (Math.log1p(d.obs) / maxLogObs) +
       0.25 * (Math.log1p(d.arc) / maxLogArc) +
       0.25 * ((9.0 - Math.min(9, Math.max(0, d.occ))) / 9.0) +
-      0.10 * (d.spec !== 'NAO_ESPECTROGRAFADO' ? 1.0 : 0.0) +
+      0.10 * d.has_spec +
       0.05 * d.diam_m_real
     );
     const c1 = 1.0 / (d.dv * Math.sqrt(Math.max(d.dur, 1.0)));
@@ -1043,7 +1408,7 @@ function recomputeTOPSIS() {{
   const top1 = feats[0];
   document.getElementById('kpi-top1-name').textContent = top1.name;
   document.getElementById('kpi-top1-meta').textContent =
-    `Δv ${{top1.dv.toFixed(3)}} km/s • TOPSIS ${{top1.topsis.toFixed(1)}} • ${{top1.spec}}`;
+    `Δv ${{top1.dv.toFixed(3)}} km/s • TOPSIS ${{top1.topsis.toFixed(1)}} • Espectro: ${{top1.spec}}`;
 
   const topPlot = feats.slice(0, 300);
   const trace = {{
@@ -1052,7 +1417,7 @@ function recomputeTOPSIS() {{
     mode: 'markers',
     type: 'scatter',
     text: topPlot.map((r, idx) =>
-      `<b>#${{idx+1}} ${{r.name}}</b><br>Espectro: ${{r.spec}}<br>Diâmetro Ref: ${{r.diam}} m<br>Observações: ${{r.obs}} (OCC ${{r.occ}})<br>TOPSIS: ${{r.topsis.toFixed(2)}}`
+      `<b>#${{idx+1}} ${{r.name}}</b><br>Espectro: ${{r.spec}}<br>Diâmetro Ref.: ${{r.diam}} m<br>Observações: ${{r.obs}} (OCC ${{r.occ}})<br>TOPSIS: ${{r.topsis.toFixed(2)}}`
     ),
     hovertemplate: '%{{text}}<br>Δv: %{{x:.3f}} km/s | Duração: %{{y}} d<extra></extra>',
     marker: {{
@@ -1065,27 +1430,27 @@ function recomputeTOPSIS() {{
   }};
 
   const layout = {{
-    title: {{text: `<b>Espaço de Decisão Astrodinâmico — Top ${{topPlot.length}} Alvos Qualificados</b>`, font: {{color: '#F1F5F9', size: 16}}}},
+    title: {{text: `<b>Espaço de Decisão Astrodinâmico — Top ${{topPlot.length}} Alvos Qualificados</b>`, font: {{color: '#F1F5F9', size: 15.5}}}},
     paper_bgcolor: '#1D1226', plot_bgcolor: '#160D18',
     font: {{color: '#F1F5F9', family: 'Segoe UI, sans-serif'}},
-    margin: {{l: 55, r: 30, t: 52, b: 48}},
-    xaxis: {{title: 'Δv Mínimo NASA NHATS (km/s)', gridcolor: '#2A2438'}},
-    yaxis: {{title: 'Duração da Missão (Dias)', gridcolor: '#2A2438'}}
+    margin: {{l: 55, r: 30, t: 54, b: 48}},
+    xaxis: {{title: 'Δv Mínimo NASA NHATS (km/s)', gridcolor: '#2A2438', automargin: true}},
+    yaxis: {{title: 'Duração da Missão (Dias)', gridcolor: '#2A2438', automargin: true}}
   }};
   Plotly.react('plot-sim-scatter', [trace], layout, {{responsive: true, displaylogo: false}});
 
   tbody.innerHTML = feats.slice(0, 20).map((r, idx) => `
     <tr>
-      <td><strong>#${{idx + 1}}</strong></td>
-      <td>${{r.pdes}}</td>
-      <td>${{r.name}}</td>
-      <td>${{r.spec}}</td>
-      <td style="color:#34D399;font-weight:700;">${{r.dv.toFixed(3)}}</td>
-      <td>${{r.dur}}</td>
-      <td>${{r.diam.toFixed(1)}}</td>
-      <td>${{r.obs}}</td>
-      <td>${{r.occ}}</td>
-      <td style="color:#1CA39E;font-weight:800;">${{r.topsis.toFixed(2)}}</td>
+      <td class="txt-col"><strong>#${{idx + 1}}</strong></td>
+      <td class="txt-col">${{r.pdes}}</td>
+      <td class="txt-col">${{r.name}}</td>
+      <td class="txt-col">${{r.spec}}</td>
+      <td class="num-col" style="color:#34D399;font-weight:700;">${{r.dv.toFixed(3)}}</td>
+      <td class="num-col">${{r.dur}}</td>
+      <td class="num-col">${{r.diam.toFixed(1)}}</td>
+      <td class="num-col">${{r.obs.toLocaleString('pt-BR')}}</td>
+      <td class="num-col">${{r.occ}}</td>
+      <td class="num-col" style="color:#1CA39E;font-weight:800;">${{r.topsis.toFixed(2)}}</td>
     </tr>
   `).join('');
 }}
@@ -1106,7 +1471,7 @@ function resetDefaults() {{
 
 function exportFilteredCSV() {{
   if (!currentRanked.length) return;
-  const header = ['rank','spkid','pdes','nome_oficial','classe_espectral','delta_v_kms','duracao_dias','diametro_ref_m','observacoes','occ','score_topsis'];
+  const header = ['rank','spkid','designacao','asteroide_oficial','espectro','delta_v_kms','duracao_dias','diametro_ref_m','observacoes','occ','score_topsis'];
   const rows = currentRanked.map((r, i) => [
     i+1, r.spkid, `"${{r.pdes}}"`, `"${{r.name}}"`, `"${{r.spec}}"`,
     r.dv, r.dur, r.diam, r.obs, r.occ, r.topsis.toFixed(2)
@@ -1127,4 +1492,10 @@ window.addEventListener('DOMContentLoaded', () => {{
 </html>
 """
     out_path.write_text(html, encoding="utf-8")
+
+    # Sync directly to docs/index.html and docs/favicon.svg when docs/ exists
+    if DOCS_DIR.exists():
+        (DOCS_DIR / "index.html").write_text(html, encoding="utf-8")
+        (DOCS_DIR / "favicon.svg").write_text(FAVICON_SVG, encoding="utf-8")
+
     return out_path

@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relatório Técnico Executivo — Operações NewSpace</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="alternate icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23160D18%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2255%25%22%20stop-color%3D%22%2323145B%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2309456C%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22orb%22%20x1%3D%220%25%22%20y1%3D%22100%25%22%20x2%3D%22100%25%22%20y2%3D%220%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23026F6E%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%231CA39E%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22url%28%23bg%29%22%20stroke%3D%22%231CA39E%22%20stroke-width%3D%222%22/%3E%0A%20%20%3Cellipse%20cx%3D%2232%22%20cy%3D%2232%22%20rx%3D%2224%22%20ry%3D%2210%22%20transform%3D%22rotate%28-32%2032%2032%29%22%20fill%3D%22none%22%20stroke%3D%22url%28%23orb%29%22%20stroke-width%3D%223.2%22/%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%229.5%22%20fill%3D%22%231CA39E%22/%3E%0A%20%20%3Ccircle%20cx%3D%2229%22%20cy%3D%2229.5%22%20r%3D%222.2%22%20fill%3D%22%2309456C%22%20opacity%3D%220.65%22/%3E%0A%20%20%3Ccircle%20cx%3D%2236%22%20cy%3D%2235%22%20r%3D%221.6%22%20fill%3D%22%2309456C%22%20opacity%3D%220.65%22/%3E%0A%20%20%3Ccircle%20cx%3D%2249%22%20cy%3D%2221%22%20r%3D%223.6%22%20fill%3D%22%23F1F5F9%22/%3E%0A%3C/svg%3E">
 <style>
   :root {
     --bg: #160D18;
@@ -23,12 +25,15 @@
     line-height: 1.6;
   }
   .container {
-    max-width: 1120px; margin: 0 auto;
-    background: rgba(22, 13, 24, 0.92);
+    max-width: 1180px; margin: 0 auto;
+    background: rgba(22, 13, 24, 0.94);
     border: 1px solid rgba(28, 163, 158, 0.35);
     border-radius: 14px;
-    padding: 40px 48px;
+    padding: 36px 44px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  }
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 10px;
   }
   .badge {
     display: inline-block; padding: 5px 12px; border-radius: 999px;
@@ -36,13 +41,20 @@
     color: var(--cyan); font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
     text-transform: uppercase;
   }
-  h1 { font-size: 28px; margin: 12px 0 8px; color: #ffffff; }
+  .nav-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 8px; text-decoration: none;
+    background: var(--card); color: #fff; border: 1px solid var(--cyan);
+    font-size: 12.5px; font-weight: 600; transition: background 0.15s;
+  }
+  .nav-link:hover { background: var(--teal); }
+  h1 { font-size: 27px; margin: 10px 0 8px; color: #ffffff; line-height: 1.25; }
   h2 {
-    font-size: 20px; margin-top: 34px; padding-bottom: 8px;
+    font-size: 19px; margin-top: 34px; padding-bottom: 8px;
     border-bottom: 2px solid var(--teal); color: var(--cyan);
   }
-  h3 { font-size: 16px; color: #e2e8f0; margin-top: 22px; }
-  .meta { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+  h3 { font-size: 15.5px; color: #e2e8f0; margin-top: 22px; }
+  .meta { color: var(--muted); font-size: 13.5px; margin-bottom: 24px; }
   .kpi-grid {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
     gap: 16px; margin: 24px 0;
@@ -52,26 +64,41 @@
     border: 1px solid rgba(28,163,158,0.4); border-radius: 10px; padding: 16px 18px;
   }
   .kpi-val { font-size: 24px; font-weight: 800; color: var(--cyan); }
-  .kpi-lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+  .kpi-lbl { font-size: 11.5px; color: var(--muted); text-transform: uppercase; margin-top: 4px; letter-spacing: 0.04em; }
   .callout {
     background: rgba(2, 111, 110, 0.18); border-left: 4px solid var(--cyan);
     padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 18px 0;
   }
+  .table-wrap {
+    width: 100%; overflow-x: auto; margin: 14px 0 24px;
+    border-radius: 8px; border: 1px solid rgba(28, 163, 158, 0.25);
+  }
   .data-table {
-    width: 100%; border-collapse: collapse; margin: 14px 0 22px; font-size: 13px;
+    width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto;
   }
   .data-table th {
-    background: var(--card); color: #fff; text-align: left; padding: 10px 12px;
-    border-bottom: 2px solid var(--cyan);
+    background: var(--card); color: #fff; padding: 11px 13px;
+    border-bottom: 2px solid var(--cyan); font-weight: 700; line-height: 1.3;
   }
   .data-table td {
-    padding: 9px 12px; border-bottom: 1px solid rgba(148,163,184,0.18);
+    padding: 9.5px 13px; border-bottom: 1px solid rgba(148,163,184,0.16);
+    vertical-align: middle;
   }
-  .data-table tr:nth-child(even) { background: rgba(35, 20, 91, 0.28); }
+  .data-table th.txt-col, .data-table td.txt-col { text-align: left; }
+  .data-table th.num-col, .data-table td.num-col {
+    text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .data-table tr:nth-child(even) { background: rgba(35, 20, 91, 0.26); }
+  .data-table tr:hover { background: rgba(28, 163, 158, 0.12); }
   ul li { margin-bottom: 8px; }
+  @media (max-width: 768px) {
+    .container { padding: 22px 18px; }
+    h1 { font-size: 22px; }
+  }
   @media print {
     body { background: #fff; color: #111; padding: 0; }
-    .container { box-shadow: none; border: none; background: #fff; color: #111; padding: 16px; }
+    .container { box-shadow: none; border: none; background: #fff; color: #111; padding: 16px; max-width: 100%; }
+    .nav-link { display: none; }
     h1, h2, h3, .kpi-val { color: #09456C !important; }
     .data-table th { background: #09456C !important; color: #fff !important; -webkit-print-color-adjust: exact; }
   }
@@ -79,203 +106,31 @@
 </head>
 <body>
 <div class="container">
-  <span class="badge">Relatório Técnico de Decisão • NewSpace Analytics</span>
+  <div class="top-bar">
+    <span class="badge">Relatório Técnico de Decisão • NewSpace Analytics</span>
+    <a class="nav-link" href="index.html">&larr; Voltar ao Dashboard Interativo</a>
+  </div>
   <h1>Benchmarking de Mineração, Tendências de Informação e Seleção Multicritério</h1>
-  <div class="meta">Gerado em 04/11/2026 18:23 • Base Empírica Auditada: 122,200 registros reais (NASA JPL SBDB &amp; NHATS, USSPACECOM SATCAT, Harvard-Smithsonian GCAT)</div>
+  <div class="meta">Gerado em 04/11/2026 19:34 • Base Empírica Auditada: 122,200 registros reais (NASA JPL SBDB &amp; NHATS, USSPACECOM SATCAT, Harvard-Smithsonian GCAT)</div>
 
   <div class="kpi-grid">
     <div class="kpi-card"><div class="kpi-val">122,200</div><div class="kpi-lbl">Registros Científicos Reais</div></div>
-    <div class="kpi-card"><div class="kpi-val">3.9x</div><div class="kpi-lbl">Speedup Polars (Lazy Parquet)</div></div>
+    <div class="kpi-card"><div class="kpi-val">3.7x</div><div class="kpi-lbl">Speedup Polars (Lazy Parquet)</div></div>
     <div class="kpi-card"><div class="kpi-val">16.9% a.a.</div><div class="kpi-lbl">CAGR Produção de Informação</div></div>
     <div class="kpi-card"><div class="kpi-val">92</div><div class="kpi-lbl">Alvos Minerais Qualificados</div></div>
   </div>
 
   <h2>1. Benchmarking de Motores de Persistência e Mineração</h2>
-  <p>Comparativo empírico entre o modelo relacional SQLite (sem e com indexação B-Tree + WAL) e motores analíticos em memória/colunares:</p>
-  <table border="1" class="dataframe data-table">
-  <thead>
-    <tr style="text-align: right;">
-      <th>engine</th>
-      <th>latencia_total_mediana_ms</th>
-      <th>latencia_media_ms</th>
-      <th>p95_medio_ms</th>
-      <th>pico_memoria_max_kb</th>
-      <th>throughput_medio_krows_s</th>
-      <th>speedup_vs_sqlite_sem_indice</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Polars (Lazy Parquet)</td>
-      <td>10.922</td>
-      <td>3.600</td>
-      <td>3.779</td>
-      <td>5.0</td>
-      <td>11008.5</td>
-      <td>3.88</td>
-    </tr>
-    <tr>
-      <td>SQLite (Indexado + WAL)</td>
-      <td>17.371</td>
-      <td>5.789</td>
-      <td>5.829</td>
-      <td>20.7</td>
-      <td>27270.0</td>
-      <td>2.44</td>
-    </tr>
-    <tr>
-      <td>DuckDB (OLAP Parquet)</td>
-      <td>18.344</td>
-      <td>6.140</td>
-      <td>6.442</td>
-      <td>218.8</td>
-      <td>6239.9</td>
-      <td>2.31</td>
-    </tr>
-    <tr>
-      <td>Pandas (In-Memory)</td>
-      <td>34.314</td>
-      <td>11.430</td>
-      <td>11.584</td>
-      <td>4260.8</td>
-      <td>3605.2</td>
-      <td>1.23</td>
-    </tr>
-    <tr>
-      <td>SQLite (Sem Índices)</td>
-      <td>42.371</td>
-      <td>14.160</td>
-      <td>14.346</td>
-      <td>20.7</td>
-      <td>2791.3</td>
-      <td>1.00</td>
-    </tr>
-  </tbody>
-</table>
+  <p>Comparativo empírico entre o modelo relacional SQLite (sem e com indexação composta B-Tree + WAL + ANALYZE) e motores analíticos em memória/colunares:</p>
+  <div class="table-wrap"><table class="data-table"><thead><tr><th class="txt-col">Motor Analítico / Persistência</th><th class="num-col">Latência Total (ms)</th><th class="num-col">Média / Carga (ms)</th><th class="num-col">P95 (ms)</th><th class="num-col">Memória Pico (KB)</th><th class="num-col">Vazão (mil reg/s)</th><th class="num-col">Speedup</th></tr></thead><tbody><tr><td class="txt-col">Polars (Lazy Parquet)</td><td class="num-col">11.45</td><td class="num-col">3.84</td><td class="num-col">4.14</td><td class="num-col">5.0</td><td class="num-col">10,922.8</td><td class="num-col">3.68x</td></tr><tr><td class="txt-col">SQLite (Indexado + WAL)</td><td class="num-col">17.48</td><td class="num-col">5.83</td><td class="num-col">5.92</td><td class="num-col">20.7</td><td class="num-col">27,247.3</td><td class="num-col">2.41x</td></tr><tr><td class="txt-col">DuckDB (OLAP Parquet)</td><td class="num-col">18.36</td><td class="num-col">6.16</td><td class="num-col">6.52</td><td class="num-col">218.8</td><td class="num-col">6,256.0</td><td class="num-col">2.29x</td></tr><tr><td class="txt-col">Pandas (In-Memory)</td><td class="num-col">35.44</td><td class="num-col">11.82</td><td class="num-col">12.04</td><td class="num-col">4,260.8</td><td class="num-col">3,567.2</td><td class="num-col">1.19x</td></tr><tr><td class="txt-col">SQLite (Sem Índices)</td><td class="num-col">42.10</td><td class="num-col">14.06</td><td class="num-col">14.30</td><td class="num-col">20.7</td><td class="num-col">2,843.3</td><td class="num-col">1.00x</td></tr></tbody></table></div>
   <h3>Modelagem Atuarial Supervisionada de Risco de Lançamento (5-Fold CV)</h3>
-  <table border="1" class="dataframe data-table">
-  <thead>
-    <tr style="text-align: right;">
-      <th>modelo_atuarial</th>
-      <th>lancamentos_avaliados</th>
-      <th>taxa_base_sinistro_pct</th>
-      <th>roc_auc</th>
-      <th>pr_auc</th>
-      <th>brier_score_calibracao</th>
-      <th>log_loss</th>
-      <th>f1_weighted</th>
-      <th>tempo_cv_5fold_ms</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Regressão Logística L2 (Baseline Atuarial)</td>
-      <td>7418</td>
-      <td>7.28</td>
-      <td>0.7846</td>
-      <td>0.3093</td>
-      <td>0.05851</td>
-      <td>0.2175</td>
-      <td>0.9032</td>
-      <td>54.4</td>
-    </tr>
-    <tr>
-      <td>Extra Trees (200 Árvores)</td>
-      <td>7418</td>
-      <td>7.28</td>
-      <td>0.7762</td>
-      <td>0.3354</td>
-      <td>0.05750</td>
-      <td>0.2160</td>
-      <td>0.9036</td>
-      <td>1470.7</td>
-    </tr>
-    <tr>
-      <td>Rede Neural MLP (64x32 ReLU)</td>
-      <td>7418</td>
-      <td>7.28</td>
-      <td>0.7707</td>
-      <td>0.2853</td>
-      <td>0.05973</td>
-      <td>0.2231</td>
-      <td>0.9036</td>
-      <td>2234.9</td>
-    </tr>
-    <tr>
-      <td>Random Forest (200 Árvores)</td>
-      <td>7418</td>
-      <td>7.28</td>
-      <td>0.7678</td>
-      <td>0.3184</td>
-      <td>0.05809</td>
-      <td>0.2182</td>
-      <td>0.9102</td>
-      <td>2180.4</td>
-    </tr>
-    <tr>
-      <td>HistGradientBoosting (GBDT)</td>
-      <td>7418</td>
-      <td>7.28</td>
-      <td>0.7576</td>
-      <td>0.3113</td>
-      <td>0.05876</td>
-      <td>0.2263</td>
-      <td>0.9121</td>
-      <td>1133.0</td>
-    </tr>
-  </tbody>
-</table>
+  <div class="table-wrap"><table class="data-table"><thead><tr><th class="txt-col">Modelo Preditivo Atuarial</th><th class="num-col">Voos</th><th class="num-col">ROC-AUC</th><th class="num-col">PR-AUC</th><th class="num-col">Brier Score</th><th class="num-col">Log-Loss</th><th class="num-col">F1-Score</th><th class="num-col">Tempo CV (ms)</th></tr></thead><tbody><tr><td class="txt-col">Regressão Logística L2 (Baseline Atuarial)</td><td class="num-col">7,418</td><td class="num-col">0.7846</td><td class="num-col">0.3093</td><td class="num-col">0.05851</td><td class="num-col">0.2175</td><td class="num-col">0.9032</td><td class="num-col">164</td></tr><tr><td class="txt-col">Extra Trees (200 Árvores)</td><td class="num-col">7,418</td><td class="num-col">0.7762</td><td class="num-col">0.3354</td><td class="num-col">0.05750</td><td class="num-col">0.2160</td><td class="num-col">0.9036</td><td class="num-col">1,456</td></tr><tr><td class="txt-col">Rede Neural MLP (64x32 ReLU)</td><td class="num-col">7,418</td><td class="num-col">0.7707</td><td class="num-col">0.2853</td><td class="num-col">0.05973</td><td class="num-col">0.2231</td><td class="num-col">0.9036</td><td class="num-col">2,230</td></tr><tr><td class="txt-col">Random Forest (200 Árvores)</td><td class="num-col">7,418</td><td class="num-col">0.7678</td><td class="num-col">0.3184</td><td class="num-col">0.05809</td><td class="num-col">0.2182</td><td class="num-col">0.9102</td><td class="num-col">2,159</td></tr><tr><td class="txt-col">HistGradientBoosting (GBDT)</td><td class="num-col">7,418</td><td class="num-col">0.7576</td><td class="num-col">0.3113</td><td class="num-col">0.05876</td><td class="num-col">0.2263</td><td class="num-col">0.9121</td><td class="num-col">1,158</td></tr></tbody></table></div>
   <div class="callout">
-    <strong>Síntese Técnica:</strong> O motor <strong>Polars (Lazy Parquet)</strong> reduziu a latência analítica para <strong>10.92 ms</strong>, enquanto índices B-Tree aceleraram o SQLite em <strong>2.44x</strong>. Na subscrição de risco, <strong>Regressão Logística L2 (Baseline Atuarial)</strong> alcançou ROC-AUC de <strong>0.7846</strong> e Brier Score de <strong>0.05851</strong>.
+    <strong>Síntese Técnica:</strong> O motor <strong>Polars (Lazy Parquet)</strong> reduziu a latência analítica total para <strong>11.45 ms</strong>, enquanto índices compostos cobertos aceleraram o SQLite em <strong>2.41x</strong>. Na subscrição de risco, <strong>Regressão Logística L2 (Baseline Atuarial)</strong> alcançou ROC-AUC de <strong>0.7846</strong> e Brier Score de <strong>0.05851</strong>.
   </div>
 
   <h2>2. Tendência de Produção de Informações e Gargalo Espectroscópico</h2>
-  <table border="1" class="dataframe data-table">
-  <thead>
-    <tr style="text-align: right;">
-      <th>era_espacial</th>
-      <th>anos_completos</th>
-      <th>media_anual_obj_orbitais</th>
-      <th>media_anual_cargas_pay</th>
-      <th>media_anual_neos_descobertos</th>
-      <th>media_cargas_por_foguete</th>
-      <th>taxa_sucesso_media_pct</th>
-      <th>indice_info_medio</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>1. Era Estatal Clássica (1957–1990)</td>
-      <td>34</td>
-      <td>783.18</td>
-      <td>121.91</td>
-      <td>12.09</td>
-      <td>1.71</td>
-      <td>86.09</td>
-      <td>49.29</td>
-    </tr>
-    <tr>
-      <td>2. Transição Comercial (1991–2014)</td>
-      <td>24</td>
-      <td>804.42</td>
-      <td>136.46</td>
-      <td>544.92</td>
-      <td>1.98</td>
-      <td>93.80</td>
-      <td>83.45</td>
-    </tr>
-    <tr>
-      <td>3. Era NewSpace Exponencial (2015–2026)</td>
-      <td>11</td>
-      <td>1949.73</td>
-      <td>1563.36</td>
-      <td>2475.73</td>
-      <td>8.87</td>
-      <td>94.81</td>
-      <td>340.82</td>
-    </tr>
-  </tbody>
-</table>
+  <div class="table-wrap"><table class="data-table"><thead><tr><th class="txt-col">Era Espacial</th><th class="num-col">Anos</th><th class="num-col">Objetos Orbitais / Ano</th><th class="num-col">Satélites (PAY) / Ano</th><th class="num-col">NEOs Descobertos / Ano</th><th class="num-col">Cargas / Voo</th><th class="num-col">Sucesso Médio</th><th class="num-col">Índice Info</th></tr></thead><tbody><tr><td class="txt-col">1. Era Estatal Clássica (1957–1990)</td><td class="num-col">34</td><td class="num-col">783.2</td><td class="num-col">121.9</td><td class="num-col">12.1</td><td class="num-col">1.71</td><td class="num-col">86.09%</td><td class="num-col">49.3</td></tr><tr><td class="txt-col">2. Transição Comercial (1991–2014)</td><td class="num-col">24</td><td class="num-col">804.4</td><td class="num-col">136.5</td><td class="num-col">544.9</td><td class="num-col">1.98</td><td class="num-col">93.80%</td><td class="num-col">83.5</td></tr><tr><td class="txt-col">3. Era NewSpace Exponencial (2015–2026)</td><td class="num-col">11</td><td class="num-col">1,949.7</td><td class="num-col">1,563.4</td><td class="num-col">2,475.7</td><td class="num-col">8.87</td><td class="num-col">94.81%</td><td class="num-col">340.8</td></tr></tbody></table></div>
   <ul>
     <li><strong>Crescimento Exponencial:</strong> O fluxo anual de objetos rastreados cresceu de <strong>783/ano</strong> para <strong>1950/ano</strong> na Era NewSpace, com projeção log-linear ($R^2 = 0.9691$) apontando índice de informação de <strong>1549.8</strong> em 2030.</li>
     <li><strong>Redução de Incerteza Orbital:</strong> Correlação de Spearman <strong>&rho; = -0.7274</strong> entre volume astrométrico e queda do código OCC da NASA.</li>
@@ -283,288 +138,16 @@
   </ul>
 
   <h2>3. Funil de Seleção de Dados e Ranking TOPSIS de Prospecção</h2>
-  <table border="1" class="dataframe data-table">
-  <thead>
-    <tr style="text-align: right;">
-      <th>etapa_funil</th>
-      <th>candidatos</th>
-      <th>retencao_global_pct</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>1. Catálogo Global NASA SBDB (NEOs)</td>
-      <td>43072</td>
-      <td>100.000</td>
-    </tr>
-    <tr>
-      <td>2. Solução Balística Viável (NASA NHATS)</td>
-      <td>7169</td>
-      <td>16.644</td>
-    </tr>
-    <tr>
-      <td>3. Janela Energética (Δv ≤ 6.5 km/s &amp; Duração ≤ 450 d)</td>
-      <td>1042</td>
-      <td>2.419</td>
-    </tr>
-    <tr>
-      <td>4. Qualidade Informacional (OCC ≤ 3 &amp; Obs ≥ 50)</td>
-      <td>174</td>
-      <td>0.404</td>
-    </tr>
-    <tr>
-      <td>5. Porte Físico Operacional (Diâmetro Ref ≥ 25 m)</td>
-      <td>92</td>
-      <td>0.214</td>
-    </tr>
-    <tr>
-      <td>6. Portfólio Qualificado Final (Pós-Filtro Espectral)</td>
-      <td>92</td>
-      <td>0.214</td>
-    </tr>
-  </tbody>
-</table>
+  <div class="table-wrap"><table class="data-table"><thead><tr><th class="txt-col">Etapa do Funil de Seleção de Dados</th><th class="num-col">Candidatos Qualificados</th><th class="num-col">Retenção Global</th></tr></thead><tbody><tr><td class="txt-col">1. Catálogo Global NASA SBDB (NEOs)</td><td class="num-col">43,072</td><td class="num-col">100.000%</td></tr><tr><td class="txt-col">2. Solução Balística Viável (NASA NHATS)</td><td class="num-col">7,169</td><td class="num-col">16.644%</td></tr><tr><td class="txt-col">3. Janela Energética (Δv ≤ 6.5 km/s & Duração ≤ 450 d)</td><td class="num-col">1,042</td><td class="num-col">2.419%</td></tr><tr><td class="txt-col">4. Qualidade Informacional (OCC ≤ 3 & Obs ≥ 50)</td><td class="num-col">174</td><td class="num-col">0.404%</td></tr><tr><td class="txt-col">5. Porte Físico Operacional (Diâmetro Ref ≥ 25 m)</td><td class="num-col">92</td><td class="num-col">0.214%</td></tr><tr><td class="txt-col">6. Portfólio Qualificado Final (Pós-Filtro Espectral)</td><td class="num-col">92</td><td class="num-col">0.214%</td></tr></tbody></table></div>
   <h3>Top 10 Asteroides Próximos à Terra Recomendados (NASA JPL NHATS + SBDB)</h3>
-  <table border="1" class="dataframe data-table">
-  <thead>
-    <tr style="text-align: right;">
-      <th>ranking_topsis</th>
-      <th>pdes</th>
-      <th>nome_completo</th>
-      <th>classe_espectral</th>
-      <th>min_delta_v_kms</th>
-      <th>duracao_min_dv_dias</th>
-      <th>diametro_fisico_ref_m</th>
-      <th>num_observacoes</th>
-      <th>codigo_incerteza_occ</th>
-      <th>score_topsis</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>1</td>
-      <td>99942</td>
-      <td>99942 Apophis (2004 MN4)</td>
-      <td>Sq</td>
-      <td>6.049</td>
-      <td>354.0</td>
-      <td>340.000000</td>
-      <td>7370</td>
-      <td>0.0</td>
-      <td>60.62</td>
-    </tr>
-    <tr>
-      <td>2</td>
-      <td>2009 HC</td>
-      <td>(2009 HC)</td>
-      <td>NAO_ESPECTROGRAFADO</td>
-      <td>4.440</td>
-      <td>362.0</td>
-      <td>42.661458</td>
-      <td>209</td>
-      <td>0.0</td>
-      <td>57.25</td>
-    </tr>
-    <tr>
-      <td>3</td>
-      <td>2014 MF18</td>
-      <td>(2014 MF18)</td>
-      <td>NAO_ESPECTROGRAFADO</td>
-      <td>6.269</td>
-      <td>202.0</td>
-      <td>69.000000</td>
-      <td>78</td>
-      <td>0.0</td>
-      <td>54.10</td>
-    </tr>
-    <tr>
-      <td>4</td>
-      <td>341843</td>
-      <td>341843 (2008 EV5)</td>
-      <td>NAO_ESPECTROGRAFADO</td>
-      <td>6.291</td>
-      <td>362.0</td>
-      <td>400.000000</td>
-      <td>1486</td>
-      <td>0.0</td>
-      <td>51.52</td>
-    </tr>
-    <tr>
-      <td>5</td>
-      <td>2006 BZ147</td>
-      <td>(2006 BZ147)</td>
-      <td>NAO_ESPECTROGRAFADO</td>
-      <td>4.091</td>
-      <td>362.0</td>
-      <td>30.166206</td>
-      <td>64</td>
-      <td>3.0</td>
-      <td>50.56</td>
-    </tr>
-    <tr>
-      <td>6</td>
-      <td>2024 BF</td>
-      <td>(2024 BF)</td>
-      <td>NAO_ESPECTROGRAFADO</td>
-      <td>4.546</td>
-      <td>362.0</td>
-      <td>46.195238</td>
-      <td>82</td>
-      <td>2.0</td>
-      <td>46.42</td>
-    </tr>
-    <tr>
-      <td>7</td>
-      <td>478784</td>
-      <td>478784 (2012 UV136)</td>
-      <td>NAO_ESPECTROGRAFADO</td>
-      <td>4.670</td>
-      <td>394.0</td>
-      <td>27.694765</td>
-      <td>148</td>
-      <td>0.0</td>
-      <td>46.39</td>
-    </tr>
-    <tr>
-      <td>8</td>
-      <td>2020 MU1</td>
-      <td>(2020 MU1)</td>
-      <td>NAO_ESPECTROGRAFADO</td>
-      <td>4.403</td>
-      <td>370.0</td>
-      <td>40.187063</td>
-      <td>54</td>
-      <td>2.0</td>
-      <td>45.58</td>
-    </tr>
-    <tr>
-      <td>9</td>
-      <td>2023 KX3</td>
-      <td>(2023 KX3)</td>
-      <td>NAO_ESPECTROGRAFADO</td>
-      <td>4.170</td>
-      <td>370.0</td>
-      <td>25.690465</td>
-      <td>80</td>
-      <td>3.0</td>
-      <td>45.25</td>
-    </tr>
-    <tr>
-      <td>10</td>
-      <td>613862</td>
-      <td>613862 (2007 UY1)</td>
-      <td>NAO_ESPECTROGRAFADO</td>
-      <td>5.579</td>
-      <td>362.0</td>
-      <td>88.622796</td>
-      <td>312</td>
-      <td>0.0</td>
-      <td>44.37</td>
-    </tr>
-  </tbody>
-</table>
+  <div class="table-wrap"><table class="data-table"><thead><tr><th class="txt-col">Rank</th><th class="txt-col">Designação</th><th class="txt-col">Asteroide Oficial (NASA JPL)</th><th class="txt-col">Espectro</th><th class="num-col">Δv Mín. (km/s)</th><th class="num-col">Duração (d)</th><th class="num-col">Diâm. Ref. (m)</th><th class="num-col">Obs.</th><th class="num-col">OCC</th><th class="num-col">TOPSIS</th></tr></thead><tbody><tr><td class="txt-col">#1</td><td class="txt-col">99942</td><td class="txt-col">99942 Apophis (2004 MN4)</td><td class="txt-col">Sq</td><td class="num-col">6.049</td><td class="num-col">354</td><td class="num-col">340.0</td><td class="num-col">7,370</td><td class="num-col">0</td><td class="num-col">60.62</td></tr><tr><td class="txt-col">#2</td><td class="txt-col">2009 HC</td><td class="txt-col">(2009 HC)</td><td class="txt-col">Não Medido</td><td class="num-col">4.440</td><td class="num-col">362</td><td class="num-col">42.7</td><td class="num-col">209</td><td class="num-col">0</td><td class="num-col">57.25</td></tr><tr><td class="txt-col">#3</td><td class="txt-col">2014 MF18</td><td class="txt-col">(2014 MF18)</td><td class="txt-col">Não Medido</td><td class="num-col">6.269</td><td class="num-col">202</td><td class="num-col">69.0</td><td class="num-col">78</td><td class="num-col">0</td><td class="num-col">54.10</td></tr><tr><td class="txt-col">#4</td><td class="txt-col">341843</td><td class="txt-col">341843 (2008 EV5)</td><td class="txt-col">Não Medido</td><td class="num-col">6.291</td><td class="num-col">362</td><td class="num-col">400.0</td><td class="num-col">1,486</td><td class="num-col">0</td><td class="num-col">51.52</td></tr><tr><td class="txt-col">#5</td><td class="txt-col">2006 BZ147</td><td class="txt-col">(2006 BZ147)</td><td class="txt-col">Não Medido</td><td class="num-col">4.091</td><td class="num-col">362</td><td class="num-col">30.2</td><td class="num-col">64</td><td class="num-col">3</td><td class="num-col">50.56</td></tr><tr><td class="txt-col">#6</td><td class="txt-col">2024 BF</td><td class="txt-col">(2024 BF)</td><td class="txt-col">Não Medido</td><td class="num-col">4.546</td><td class="num-col">362</td><td class="num-col">46.2</td><td class="num-col">82</td><td class="num-col">2</td><td class="num-col">46.42</td></tr><tr><td class="txt-col">#7</td><td class="txt-col">478784</td><td class="txt-col">478784 (2012 UV136)</td><td class="txt-col">Não Medido</td><td class="num-col">4.670</td><td class="num-col">394</td><td class="num-col">27.7</td><td class="num-col">148</td><td class="num-col">0</td><td class="num-col">46.39</td></tr><tr><td class="txt-col">#8</td><td class="txt-col">2020 MU1</td><td class="txt-col">(2020 MU1)</td><td class="txt-col">Não Medido</td><td class="num-col">4.403</td><td class="num-col">370</td><td class="num-col">40.2</td><td class="num-col">54</td><td class="num-col">2</td><td class="num-col">45.58</td></tr><tr><td class="txt-col">#9</td><td class="txt-col">2023 KX3</td><td class="txt-col">(2023 KX3)</td><td class="txt-col">Não Medido</td><td class="num-col">4.170</td><td class="num-col">370</td><td class="num-col">25.7</td><td class="num-col">80</td><td class="num-col">3</td><td class="num-col">45.25</td></tr><tr><td class="txt-col">#10</td><td class="txt-col">613862</td><td class="txt-col">613862 (2007 UY1)</td><td class="txt-col">Não Medido</td><td class="num-col">5.579</td><td class="num-col">362</td><td class="num-col">88.6</td><td class="num-col">312</td><td class="num-col">0</td><td class="num-col">44.37</td></tr></tbody></table></div>
 
   <h2>4. Matriz Integrada de Subscrição Atuarial e Diretrizes Executivas</h2>
-  <table border="1" class="dataframe data-table">
-  <thead>
-    <tr style="text-align: right;">
-      <th>id_cenario</th>
-      <th>nome_asteroide</th>
-      <th>modelo_veiculo</th>
-      <th>min_delta_v_kms</th>
-      <th>indice_maturidade_info</th>
-      <th>score_topsis</th>
-      <th>score_risco_combinado</th>
-      <th>rating_atuarial</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>NS_SCEN_001</td>
-      <td>99942 Apophis (2004 MN4)</td>
-      <td>Falcon 9</td>
-      <td>6.049</td>
-      <td>98.89</td>
-      <td>60.62</td>
-      <td>24.07</td>
-      <td>A</td>
-    </tr>
-    <tr>
-      <td>NS_SCEN_002</td>
-      <td>99942 Apophis (2004 MN4)</td>
-      <td>Chang Zheng 2D</td>
-      <td>6.049</td>
-      <td>98.89</td>
-      <td>60.62</td>
-      <td>31.24</td>
-      <td>BB</td>
-    </tr>
-    <tr>
-      <td>NS_SCEN_003</td>
-      <td>99942 Apophis (2004 MN4)</td>
-      <td>Chang Zheng 2C</td>
-      <td>6.049</td>
-      <td>98.89</td>
-      <td>60.62</td>
-      <td>34.60</td>
-      <td>BB</td>
-    </tr>
-    <tr>
-      <td>NS_SCEN_004</td>
-      <td>(2009 HC)</td>
-      <td>Falcon 9</td>
-      <td>4.440</td>
-      <td>69.67</td>
-      <td>57.25</td>
-      <td>29.59</td>
-      <td>A</td>
-    </tr>
-    <tr>
-      <td>NS_SCEN_005</td>
-      <td>(2009 HC)</td>
-      <td>Chang Zheng 2D</td>
-      <td>4.440</td>
-      <td>69.67</td>
-      <td>57.25</td>
-      <td>36.76</td>
-      <td>BB</td>
-    </tr>
-    <tr>
-      <td>NS_SCEN_006</td>
-      <td>(2009 HC)</td>
-      <td>Chang Zheng 2C</td>
-      <td>4.440</td>
-      <td>69.67</td>
-      <td>57.25</td>
-      <td>40.12</td>
-      <td>B</td>
-    </tr>
-    <tr>
-      <td>NS_SCEN_007</td>
-      <td>(2014 MF18)</td>
-      <td>Falcon 9</td>
-      <td>6.269</td>
-      <td>67.59</td>
-      <td>54.10</td>
-      <td>29.46</td>
-      <td>A</td>
-    </tr>
-    <tr>
-      <td>NS_SCEN_008</td>
-      <td>(2014 MF18)</td>
-      <td>Chang Zheng 2D</td>
-      <td>6.269</td>
-      <td>67.59</td>
-      <td>54.10</td>
-      <td>36.63</td>
-      <td>BB</td>
-    </tr>
-  </tbody>
-</table>
+  <div class="table-wrap"><table class="data-table"><thead><tr><th class="txt-col">Cenário</th><th class="txt-col">Asteroide Alvo</th><th class="txt-col">Veículo Lançador</th><th class="num-col">Δv (km/s)</th><th class="num-col">Maturidade Info</th><th class="num-col">TOPSIS</th><th class="num-col">Risco Combinado</th><th class="num-col">Rating</th></tr></thead><tbody><tr><td class="txt-col">NS_SCEN_001</td><td class="txt-col">99942 Apophis (2004 MN4)</td><td class="txt-col">Falcon 9</td><td class="num-col">6.049</td><td class="num-col">98.9</td><td class="num-col">60.62</td><td class="num-col">24.07</td><td class="num-col">A</td></tr><tr><td class="txt-col">NS_SCEN_002</td><td class="txt-col">99942 Apophis (2004 MN4)</td><td class="txt-col">Chang Zheng 2D</td><td class="num-col">6.049</td><td class="num-col">98.9</td><td class="num-col">60.62</td><td class="num-col">31.24</td><td class="num-col">BB</td></tr><tr><td class="txt-col">NS_SCEN_003</td><td class="txt-col">99942 Apophis (2004 MN4)</td><td class="txt-col">Chang Zheng 2C</td><td class="num-col">6.049</td><td class="num-col">98.9</td><td class="num-col">60.62</td><td class="num-col">34.60</td><td class="num-col">BB</td></tr><tr><td class="txt-col">NS_SCEN_004</td><td class="txt-col">(2009 HC)</td><td class="txt-col">Falcon 9</td><td class="num-col">4.440</td><td class="num-col">69.7</td><td class="num-col">57.25</td><td class="num-col">29.59</td><td class="num-col">A</td></tr><tr><td class="txt-col">NS_SCEN_005</td><td class="txt-col">(2009 HC)</td><td class="txt-col">Chang Zheng 2D</td><td class="num-col">4.440</td><td class="num-col">69.7</td><td class="num-col">57.25</td><td class="num-col">36.76</td><td class="num-col">BB</td></tr><tr><td class="txt-col">NS_SCEN_006</td><td class="txt-col">(2009 HC)</td><td class="txt-col">Chang Zheng 2C</td><td class="num-col">4.440</td><td class="num-col">69.7</td><td class="num-col">57.25</td><td class="num-col">40.12</td><td class="num-col">B</td></tr><tr><td class="txt-col">NS_SCEN_007</td><td class="txt-col">(2014 MF18)</td><td class="txt-col">Falcon 9</td><td class="num-col">6.269</td><td class="num-col">67.6</td><td class="num-col">54.10</td><td class="num-col">29.46</td><td class="num-col">A</td></tr><tr><td class="txt-col">NS_SCEN_008</td><td class="txt-col">(2014 MF18)</td><td class="txt-col">Chang Zheng 2D</td><td class="num-col">6.269</td><td class="num-col">67.6</td><td class="num-col">54.10</td><td class="num-col">36.63</td><td class="num-col">BB</td></tr></tbody></table></div>
   <div class="callout">
     <strong>Recomendações Executivas Imediatas:</strong>
     <ol>
-      <li>Operar arquitetura híbrida <strong>SQLite WAL Indexado + Parquet/DuckDB</strong> para conciliar integridade transacional e consultas sub-15 ms.</li>
+      <li>Operar arquitetura híbrida <strong>SQLite WAL Indexado + Parquet/DuckDB/Polars</strong> para conciliar integridade transacional e consultas sub-15 ms.</li>
       <li>Priorizar sondas precursoras para alvos TOPSIS Top-10 com &Delta;v &le; 5.5 km/s e OCC = 0, capturando valor comercial da informação espectral escassa.</li>
       <li>Exigir órbita de estacionamento baixa (&lt; 450 km) antes da injeção translunar/cislunar (evitando os 74.5% de detritos em LEO Alta e 84.0% de estágios inertes em HEO/Cislunar) e veículos com Wilson 95% &ge; 95% para concessão de Rating Atuarial AA/A.</li>
     </ol>
