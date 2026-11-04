@@ -39,8 +39,14 @@ def _render_proportional_html_table(
             cells.append(f'<td class="{cls}">{val}</td>')
         rows_html.append("<tr>" + "".join(cells) + "</tr>")
 
+    hint = (
+        '<div class="mobile-scroll-hint">&harr; Deslize lateralmente para ver todas as métricas</div>'
+        if len(df.columns) >= 5
+        else ""
+    )
     return (
-        '<div class="table-wrap"><table class="data-table">'
+        hint
+        + '<div class="table-wrap"><table class="data-table">'
         "<thead><tr>" + "".join(headers_html) + "</tr></thead>"
         "<tbody>" + "".join(rows_html) + "</tbody>"
         "</table></div>"
@@ -335,71 +341,84 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
     --muted: {PALETTE.text_muted};
   }}
   * {{ box-sizing: border-box; }}
+  html {{ -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }}
   body {{
-    margin: 0; padding: 32px 20px;
+    margin: 0;
+    padding: clamp(10px, 2.5vw, 32px) clamp(8px, 2.5vw, 20px);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background: linear-gradient(160deg, var(--bg) 0%, #1c1132 60%, #072c47 100%);
     color: var(--text);
     line-height: 1.6;
+    overflow-x: hidden;
   }}
   .container {{
     max-width: 1180px; margin: 0 auto;
-    background: rgba(22, 13, 24, 0.94);
+    background: rgba(22, 13, 24, 0.95);
     border: 1px solid rgba(28, 163, 158, 0.35);
-    border-radius: 14px;
-    padding: 36px 44px;
+    border-radius: clamp(10px, 2vw, 14px);
+    padding: clamp(18px, 3.8vw, 36px) clamp(14px, 4vw, 44px);
     box-shadow: 0 20px 50px rgba(0,0,0,0.6);
   }}
   .top-bar {{
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
   }}
   .badge {{
     display: inline-block; padding: 5px 12px; border-radius: 999px;
     background: rgba(28, 163, 158, 0.18); border: 1px solid var(--cyan);
-    color: var(--cyan); font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--cyan); font-size: clamp(10.5px, 2.2vw, 12px); font-weight: 700; letter-spacing: 0.05em;
     text-transform: uppercase;
   }}
   .nav-link {{
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 7px 14px; border-radius: 8px; text-decoration: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-height: 40px; padding: 8px 15px; border-radius: 8px; text-decoration: none;
     background: var(--card); color: #fff; border: 1px solid var(--cyan);
-    font-size: 12.5px; font-weight: 600; transition: background 0.15s;
+    font-size: 13px; font-weight: 600; transition: background 0.15s;
   }}
   .nav-link:hover {{ background: var(--teal); }}
-  h1 {{ font-size: 27px; margin: 10px 0 8px; color: #ffffff; line-height: 1.25; }}
+  h1 {{ font-size: clamp(20px, 4.2vw, 27px); margin: 10px 0 8px; color: #ffffff; line-height: 1.28; }}
   h2 {{
-    font-size: 19px; margin-top: 34px; padding-bottom: 8px;
-    border-bottom: 2px solid var(--teal); color: var(--cyan);
+    font-size: clamp(16.5px, 3.2vw, 19.5px); margin-top: clamp(24px, 4vw, 34px); padding-bottom: 8px;
+    border-bottom: 2px solid var(--teal); color: var(--cyan); line-height: 1.3;
   }}
-  h3 {{ font-size: 15.5px; color: #e2e8f0; margin-top: 22px; }}
-  .meta {{ color: var(--muted); font-size: 13.5px; margin-bottom: 24px; }}
+  h3 {{ font-size: clamp(14.5px, 2.8vw, 16px); color: #e2e8f0; margin-top: 20px; line-height: 1.35; }}
+  p, ul li, ol li {{ font-size: clamp(13.5px, 2.5vw, 15px); }}
+  ul, ol {{ padding-left: 20px; }}
+  .meta {{ color: var(--muted); font-size: clamp(12px, 2.3vw, 13.5px); margin-bottom: 20px; line-height: 1.45; }}
   .kpi-grid {{
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 16px; margin: 24px 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(10px, 2vw, 16px);
+    margin: 22px 0;
   }}
   .kpi-card {{
+    min-width: 0;
     background: linear-gradient(135deg, rgba(35,20,91,0.75), rgba(9,69,108,0.75));
-    border: 1px solid rgba(28,163,158,0.4); border-radius: 10px; padding: 16px 18px;
+    border: 1px solid rgba(28,163,158,0.4); border-radius: 10px;
+    padding: clamp(12px, 2.2vw, 16px) clamp(12px, 2.4vw, 18px);
   }}
-  .kpi-val {{ font-size: 24px; font-weight: 800; color: var(--cyan); }}
-  .kpi-lbl {{ font-size: 11.5px; color: var(--muted); text-transform: uppercase; margin-top: 4px; letter-spacing: 0.04em; }}
+  .kpi-val {{ font-size: clamp(18px, 3.6vw, 24px); font-weight: 800; color: var(--cyan); line-height: 1.2; }}
+  .kpi-lbl {{ font-size: clamp(10px, 2vw, 11.5px); color: var(--muted); text-transform: uppercase; margin-top: 4px; letter-spacing: 0.04em; line-height: 1.3; }}
   .callout {{
     background: rgba(2, 111, 110, 0.18); border-left: 4px solid var(--cyan);
-    padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 18px 0;
+    padding: clamp(12px, 2.5vw, 15px) clamp(14px, 3vw, 18px); border-radius: 0 8px 8px 0; margin: 18px 0;
+    font-size: clamp(13px, 2.4vw, 14.5px);
+  }}
+  .mobile-scroll-hint {{
+    display: none; font-size: 11px; color: var(--cyan); margin: 6px 0 -8px; font-weight: 600;
   }}
   .table-wrap {{
-    width: 100%; overflow-x: auto; margin: 14px 0 24px;
-    border-radius: 8px; border: 1px solid rgba(28, 163, 158, 0.25);
+    width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+    margin: 14px 0 24px; border-radius: 8px; border: 1px solid rgba(28, 163, 158, 0.28);
   }}
   .data-table {{
-    width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto;
+    width: 100%; border-collapse: collapse; font-size: clamp(11.8px, 2.1vw, 13px); table-layout: auto;
   }}
   .data-table th {{
-    background: var(--card); color: #fff; padding: 11px 13px;
-    border-bottom: 2px solid var(--cyan); font-weight: 700; line-height: 1.3;
+    background: var(--card); color: #fff; padding: 10px 12px;
+    border-bottom: 2px solid var(--cyan); font-weight: 700; line-height: 1.3; white-space: nowrap;
   }}
   .data-table td {{
-    padding: 9.5px 13px; border-bottom: 1px solid rgba(148,163,184,0.16);
+    padding: 9px 12px; border-bottom: 1px solid rgba(148,163,184,0.16);
     vertical-align: middle;
   }}
   .data-table th.txt-col, .data-table td.txt-col {{ text-align: left; }}
@@ -409,9 +428,31 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
   .data-table tr:nth-child(even) {{ background: rgba(35, 20, 91, 0.26); }}
   .data-table tr:hover {{ background: rgba(28, 163, 158, 0.12); }}
   ul li {{ margin-bottom: 8px; }}
-  @media (max-width: 768px) {{
-    .container {{ padding: 22px 18px; }}
-    h1 {{ font-size: 22px; }}
+
+  /* Tablet Breakpoint */
+  @media (max-width: 960px) {{
+    .kpi-grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+    .mobile-scroll-hint {{ display: block; }}
+    .data-table th:first-child, .data-table td:first-child {{
+      position: sticky; left: 0; z-index: 2;
+      box-shadow: 2px 0 6px rgba(0, 0, 0, 0.45);
+    }}
+    .data-table th:first-child {{ background: var(--card); z-index: 3; }}
+    .data-table td:first-child {{ background: #1a1128; }}
+    .data-table tr:nth-child(even) td:first-child {{ background: #201538; }}
+  }}
+
+  /* Smartphone Breakpoint */
+  @media (max-width: 560px) {{
+    .top-bar {{ flex-direction: column; align-items: stretch; }}
+    .badge {{ text-align: center; }}
+    .nav-link {{ width: 100%; min-height: 44px; }}
+    .data-table th, .data-table td {{ padding: 8px 9px; }}
+    .data-table td.txt-col {{ min-width: 120px; }}
+    .data-table td:first-child {{ min-width: 72px; }}
+  }}
+  @media (max-width: 360px) {{
+    .kpi-grid {{ grid-template-columns: 1fr; }}
   }}
   @media print {{
     body {{ background: #fff; color: #111; padding: 0; }}
@@ -450,7 +491,7 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
   <h2>2. Tendência de Produção de Informações e Gargalo Espectroscópico</h2>
   {html_tables_era}
   <ul>
-    <li><strong>Crescimento Exponencial:</strong> O fluxo anual de objetos rastreados cresceu de <strong>{era_1['media_anual_obj_orbitais']:.0f}/ano</strong> para <strong>{era_3['media_anual_obj_orbitais']:.0f}/ano</strong> na Era NewSpace, com projeção log-linear ($R^2 = {fc_2030['r2_ajuste_loglinear']:.4f}$) apontando índice de informação de <strong>{fc_2030['indice_info_projetado']:.1f}</strong> em 2030.</li>
+    <li><strong>Crescimento Exponencial:</strong> O fluxo anual de objetos rastreados cresceu de <strong>{era_1['media_anual_obj_orbitais']:.0f}/ano</strong> para <strong>{era_3['media_anual_obj_orbitais']:.0f}/ano</strong> na Era NewSpace, com projeção log-linear (R&sup2; = {fc_2030['r2_ajuste_loglinear']:.4f}) apontando índice de informação de <strong>{fc_2030['indice_info_projetado']:.1f}</strong> em 2030.</li>
     <li><strong>Redução de Incerteza Orbital:</strong> Correlação de Spearman <strong>&rho; = {rho_occ:.4f}</strong> entre volume astrométrico e queda do código OCC da NASA.</li>
     <li><strong>Oportunidade de Negócio (Gargalo Espectral):</strong> Apenas <strong>{gap['pct_neos_com_espectro']:.2f}%</strong> dos {gap['total_neos_catalogados']:,} NEOs possuem espectroscopia confirmada, validando missões precursoras enxutas de caracterização mineralógica como linha de receita imediata.</li>
   </ul>

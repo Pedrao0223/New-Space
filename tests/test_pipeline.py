@@ -161,6 +161,25 @@ def test_executed_notebook_and_dashboard_artifacts():
     assert (DOCS_DIR / "index.html").exists()
     assert (DOCS_DIR / "relatorio.html").exists()
 
+    # Verify docs/ GitHub Pages files match generated reports byte-for-byte
+    assert (DOCS_DIR / "index.html").read_text(encoding="utf-8") == dash_html
+    assert (DOCS_DIR / "relatorio.html").read_text(encoding="utf-8") == rep_html
+
+    # Verify mobile & tablet responsive CSS/JS breakpoints and touch scrolling
+    for responsive_token in (
+        'name="viewport" content="width=device-width, initial-scale=1.0"',
+        "@media (max-width: 960px)",
+        "-webkit-overflow-scrolling: touch",
+        "min-width: 0;",
+    ):
+        assert responsive_token in dash_html
+        assert responsive_token in rep_html
+
+    assert "@media (max-width: 1080px)" in dash_html
+    assert "@media (max-width: 640px)" in dash_html
+    assert "adaptPlotsForViewport" in dash_html
+    assert "toggleMobileFilters" in dash_html
+
     for raw_col in (
         "era_espacial",
         "media_anual_obj_orbitais",
