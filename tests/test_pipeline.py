@@ -207,6 +207,12 @@ def test_executed_notebook_and_dashboard_artifacts():
     assert "adaptPlotsForViewport" in chart_js
     assert "toggleMobileFilters" in ui_js
 
+    # Verify revised Data Selection Criteria section & space data research introduction
+    assert "criteria-intro-card" in dash_html
+    assert "criteria-intro-card" in dash_css
+    assert "O que são os Critérios de Seleção de Dados e sua Importância na Pesquisa Espacial" in dash_html
+    assert "3. Critérios de Seleção de Dados, Funil Qualificador e Ranking TOPSIS" in rep_html
+
     for raw_col in (
         "era_espacial",
         "media_anual_obj_orbitais",

@@ -254,12 +254,13 @@ fig_observability_and_corridors(datasets, trends).show()"""
             """---
 ## 4. Critérios de Seleção de Dados do Negócio (MCDA-TOPSIS) e Matriz Atuarial
 
-Aplicamos os **Critérios de Seleção de Dados** alinhados ao modelo de negócio integrado da equipe:
-- **Acessibilidade Energética e Operacional:** Solução balística viável no catálogo `NASA NHATS`, $\\Delta v \\le 6,5\\text{ km/s}$ e duração $\\le 450\\text{ dias}$.
-- **Qualidade e Maturidade da Informação Orbital:** Código de Incerteza `OCC <= 3` e mínimo de `50` observações astrométricas confirmadas.
-- **Porte Físico Mínimo:** Diâmetro físico de referência $\\ge 25\\text{ m}$.
-- **Subscrição Atuarial de Lançadores:** Mínimo de `10` voos orbitais, operação ativa na era NewSpace e Limite Inferior de Confiabilidade de Wilson (95%) $\\ge 85\\%$.
-- **Ordenação Multicritério (`TOPSIS`)**: Combina eficiência energética ($\\Delta v$ e duração), índice composto de maturidade informacional, escala física e redundância de trajetórias viáveis."""
+Na ciência e pesquisa de dados espaciais, os **critérios de seleção de dados** constituem filtros determinísticos físicos, astrométricos e estatísticos aplicados sobre grandes catálogos astronômicos e orbitais para isolar registros operacionalmente alcançáveis e com efemérides confiáveis. Como a produção de telemetria e descobertas cresce exponencialmente mas exibe forte assimetria observacional (objetos recém-descobertos com incerteza orbital `OCC 7–9` ou custo propulsivo proibitivo), essa qualificação prévia evita distorções analíticas e garante que a decisão multicritério (`MCDA-TOPSIS`) opere apenas sobre alvos exequíveis e seguráveis:
+
+- **Acessibilidade Energética e Operacional (Aplicação Astrodinâmica):** Solução balística viável de ida e volta no catálogo `NASA NHATS`, orçamento propulsivo $\\Delta v \\le 6,50\\text{ km/s}$ e janela total $\\le 450\\text{ dias}$, otimizando fração de massa de propelente.
+- **Qualidade e Maturidade da Informação Orbital (Segurança Navegacional):** Código de Incerteza Efeméride `OCC <= 3` (escala NASA de `0` = órbita precisa a `9` = alta incerteza) e mínimo de `50` observações astrométricas confirmadas no `SBDB`.
+- **Porte Físico e Estratégia Mineralógica (Reconhecimento & ISRU):** Diâmetro físico de referência $\\ge 25\\text{ m}$, diferenciando candidatos a nanossondas precursoras de caracterização espectral frente a alvos já medidos nos complexos `C` (voláteis/água) e `S`/`X` (silicatos e metais).
+- **Subscrição Atuarial de Lançadores:** Operação ativa na Era NewSpace, mínimo de `10` voos orbitais e Limite Inferior de Confiabilidade de Wilson (95%) $\\ge 85\\%$.
+- **Ordenação Multicritério (`TOPSIS`):** Combina eficiência energética ($\\Delta v$ e duração — peso `40%`), índice composto de maturidade informacional (`25%`), escala física (`20%`) e redundância de janelas balísticas (`15%`)."""
         ),
         new_code_cell(
             """selection = apply_selection_criteria_and_topsis(datasets)

@@ -13,7 +13,14 @@ from pathlib import Path
 import pandas as pd
 
 from newspace.benchmarking import BenchmarkSuiteResults
-from newspace.config import DOCS_DIR, FAVICON_DATA_URI, FAVICON_SVG, PALETTE, REPORTS_DIR
+from newspace.config import (
+    DEFAULT_CRITERIA,
+    DOCS_DIR,
+    FAVICON_DATA_URI,
+    FAVICON_SVG,
+    PALETTE,
+    REPORTS_DIR,
+)
 from newspace.ingestion import MinedDatasets
 from newspace.selection_trends import SelectionDecisionOutput, TrendAnalysisSummary
 
@@ -289,7 +296,16 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
 - **Bifurcação de Risco em LEO:** O corredor `LEO_CONSTELACAO` (450–650 km) abriga **{int(cor_leo_const['objetos_em_orbita']):,} objetos em órbita**, sendo **{int(cor_leo_const['satelites_ativos']):,} satélites ativos manobráveis** ({cor_leo_const['razao_detritos_pct']:.1f}% detritos). Em contraste, `LEO_SSO_ALTA` (650–2.000 km) possui volume similar (**{int(cor_leo_sso['objetos_em_orbita']):,} objetos**), porém composto por **{cor_leo_sso['razao_detritos_pct']:.1f}% de detritos e estágios inertes ({int(cor_leo_sso['detritos_e_estagios_orbita']):,} objetos não manobráveis)** — índice de congestão **{cor_leo_sso['indice_congestao_orbital']:.1f}/100**.
 - **Alerta Crítico no Corredor de Escape `HEO_CISLUNAR`:** Das **{int(cor_cislunar['objetos_em_orbita']):,} estruturas em órbita** no corredor elíptico/cislunar obrigatório para missões a asteroides, **{cor_cislunar['razao_detritos_pct']:.1f}% ({int(cor_cislunar['detritos_e_estagios_orbita']):,} objetos)** são estágios superiores descartados (`R/B`) e detritos cruzando o perigeu terrestre. As janelas de injeção translunar/interplanetária devem evitar estritamente estacionamento prolongado acima de 650 km.
 
-### 4.2 Funil de Seleção de Dados Aplicado ao Portfólio
+### 4.2 Critérios de Seleção de Dados e Funil Qualificador Aplicado ao Portfólio
+
+Na pesquisa e mineração de dados espaciais, os **critérios de seleção de dados** constituem regras determinísticas de qualificação física, astrométrica e atuarial aplicadas sobre catálogos astronômicos e orbitais massivos para isolar registros operacionalmente viáveis e estatisticamente confiáveis. Diante do crescimento exponencial de descobertas na Era NewSpace — em que milhares de objetos recém-catalogados ainda apresentam efemérides incertas (`OCC 7–9`), arcos observacionais curtos ou orçamentos propulsivos proibitivos — a aplicação estruturada desses critérios evita distorções analíticas e assegura que a modelagem multicritério (`MCDA-TOPSIS`) opere exclusivamente sobre alvos exequíveis e seguráveis.
+
+**Aplicações e Benefícios na Análise Espacial:**
+- **Dimensionamento Astrodinâmico e Propulsivo:** Restringe o universo de {n_ast:,} NEOs da base *NASA JPL SBDB* aos {n_nhats:,} alvos com solução balística no *NASA NHATS* e filtra janelas com $\\Delta v \\le {DEFAULT_CRITERIA.max_delta_v_kms:.2f}\\text{{ km/s}}$ e duração $\\le {DEFAULT_CRITERIA.max_duration_days}\\text{{ dias}}$, otimizando fração de massa de propelente e janela operacional.
+- **Segurança Navegacional e Redução de Risco Epistêmico:** Exige Código de Incerteza Orbital `OCC` $\\le {DEFAULT_CRITERIA.max_orbit_uncertainty}$ (escala NASA de `0` = órbita determinada com precisão máxima a `9` = alta incerteza) e mínimo de `{DEFAULT_CRITERIA.min_observations}` observações astrométricas confirmadas, garantindo guiagem e encontro orbital precisos.
+- **Viabilidade Mineralógica, Reconhecimento Precursor e ISRU:** Estabelece porte físico mínimo de referência ($\\ge 25\\text{{ m}}$) e permite segmentar alvos candidatos a nanossondas precursoras de sensoriamento espectral (*Não Medidos*) frente a alvos já caracterizados nos complexos `C` (voláteis/água para propelente orbital) e `S`/`X` (silicatos e metais).
+- **Credibilidade Atuarial de Lançamento:** Na integração com a malha logística, qualifica veículos ativos na Era NewSpace com histórico mínimo de `{DEFAULT_CRITERIA.min_launcher_flights}` voos orbitais e limite inferior de confiabilidade de Wilson (95%) $\\ge {DEFAULT_CRITERIA.min_wilson_reliability * 100:.0f}\\%$, fundamentando a subscrição securitária.
+
 {disp_funnel.to_markdown(index=False)}
 
 ### 4.3 Top 10 Asteroides Recomendados para Prospecção (Ranking MCDA-TOPSIS)
@@ -496,7 +512,16 @@ A comparação estrutural entre as três eras espaciais comprova uma mudança de
     <li><strong>Oportunidade de Negócio (Gargalo Espectral):</strong> Apenas <strong>{gap['pct_neos_com_espectro']:.2f}%</strong> dos {gap['total_neos_catalogados']:,} NEOs possuem espectroscopia confirmada, validando missões precursoras enxutas de caracterização mineralógica como linha de receita imediata.</li>
   </ul>
 
-  <h2>3. Funil de Seleção de Dados e Ranking TOPSIS de Prospecção</h2>
+  <h2>3. Critérios de Seleção de Dados, Funil Qualificador e Ranking TOPSIS</h2>
+  <p>
+    Na pesquisa de dados espaciais, os <strong>critérios de seleção de dados</strong> são regras objetivas de filtragem física, astrométrica e estatística aplicadas sobre catálogos brutos de grande escala ({n_ast:,} NEOs no <em>NASA JPL SBDB</em>, {n_nhats:,} alvos balísticos no <em>NASA NHATS</em> e {n_lan:,} lançamentos no <em>GCAT</em>) para separar registros operacionalmente viáveis de objetos com incerteza orbital impeditiva ou custo energético inexequível. Sua adoção garante rigor científico antes da ordenação multicritério (<em>MCDA-TOPSIS</em>), gerando benefícios diretos em quatro frentes da análise espacial:
+  </p>
+  <ul>
+    <li><strong>Engenharia Astrodinâmica (&Delta;v &le; {DEFAULT_CRITERIA.max_delta_v_kms:.2f} km/s e Duração &le; {DEFAULT_CRITERIA.max_duration_days} dias):</strong> Isola trajetórias de ida e volta energeticamente compatíveis com estágios superiores atuais, reduzindo massa de propelente e custo de missão.</li>
+    <li><strong>Confiabilidade Efeméride e Navegação (OCC &le; {DEFAULT_CRITERIA.max_orbit_uncertainty} e &ge; {DEFAULT_CRITERIA.min_observations} observações):</strong> Restringe a seleção a órbitas bem determinadas na escala oficial da NASA (0 = certeza máxima a 9 = incerteza crítica), mitigando o risco de perda do alvo no espaço profundo.</li>
+    <li><strong>Escala Física e Estratégia Mineralógica (Diâmetro &ge; 25 m e Taxonomia Espectral):</strong> Qualifica corpos com volume operacional para missões robóticas, permitindo direcionar tanto nanossondas precursoras de reconhecimento espectral quanto missões ISRU (água/voláteis no Complexo-C e metais em S/X).</li>
+    <li><strong>Subscrição Atuarial de Lançadores (&ge; {DEFAULT_CRITERIA.min_launcher_flights} voos e Wilson 95% &ge; {DEFAULT_CRITERIA.min_wilson_reliability * 100:.0f}%):</strong> Assegura amostragem estatística robusta para precificação de apólices e cruzamento com o risco de detritos nos corredores orbitais.</li>
+  </ul>
   {html_tables_funnel}
   <h3>Top 10 Asteroides Próximos à Terra Recomendados (NASA JPL NHATS + SBDB)</h3>
   {html_tables_top10}

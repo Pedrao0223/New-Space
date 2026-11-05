@@ -1118,6 +1118,27 @@ def export_standalone_custom_dashboard(
       <div class="kpi"><div class="lbl">CAGR Produção de Informação</div><div class="val">{fc_2030['cagr_newspace_2015_2025_pct']:.1f}% a.a.</div><div class="hint">Era NewSpace (2015–2025)</div></div>
     </div>
 
+    <div class="criteria-intro-card">
+      <h2 class="criteria-intro-title">O que são os Critérios de Seleção de Dados e sua Importância na Pesquisa Espacial</h2>
+      <p class="criteria-intro-lead">
+        Na ciência de dados aeroespacial, os <strong>critérios de seleção de dados</strong> são filtros físicos, astrométricos e estatísticos aplicados sobre grandes catálogos brutos ({len(datasets.asteroids):,} asteroides próximos à Terra na base <em>NASA JPL SBDB</em> e {len(client_records):,} alvos com soluções balísticas completas no <em>NASA NHATS</em>) para isolar apenas objetos operacionalmente alcançáveis e com efemérides confiáveis. Como a produção de informações espaciais cresce exponencialmente mas apresenta forte assimetria observacional, essa triagem prévia impede que algoritmos de decisão (<em>MCDA-TOPSIS</em>) ranqueiem alvos energeticamente inviáveis ou com alto risco de perda navegacional.
+      </p>
+      <div class="criteria-pillars">
+        <div class="criteria-pillar">
+          <strong>1. Viabilidade Astrodinâmica (&Delta;v &amp; Janela)</strong>
+          Restringe a análise a missões compatíveis com a capacidade propulsiva atual (&Delta;v &le; 6,50 km/s, comparável à transferência cislunar, e duração &le; 450 dias), reduzindo massa de propelente e custo de lançamento.
+        </div>
+        <div class="criteria-pillar">
+          <strong>2. Precisão Navegacional (OCC &amp; Astrometria)</strong>
+          Filtra incertezas orbitais elevadas ao exigir <em>Orbit Condition Code</em> OCC &le; 3 (escala NASA de 0 a 9) e &ge; 50 observações confirmadas, convertendo densidade de dados em segurança de guiagem e encontro orbital.
+        </div>
+        <div class="criteria-pillar">
+          <strong>3. Aplicação Mineralógica, ISRU &amp; Atuarial</strong>
+          Qualifica corpos com escala útil (&ge; 25 m) para sondas precursoras de reconhecimento espectral ou extração de recursos (água/voláteis no Complexo-C e metais em S/X), apoiando a subscrição securitária da missão.
+        </div>
+      </div>
+    </div>
+
     <div class="sim-layout">
       <aside class="control-box">
         <button type="button" class="mobile-filter-toggle" id="btn-filter-toggle" aria-expanded="true">
@@ -1128,25 +1149,31 @@ def export_standalone_custom_dashboard(
           <div class="ctrl-columns">
             <div class="ctrl-col">
               <h3>Critérios de Seleção de Dados</h3>
+              <p class="ctrl-section-note">Restrições eliminatórias físicas, astrométricas e taxonômicas aplicadas sobre os alvos reais da NASA JPL:</p>
               <div class="ctrl-group">
                 <label for="ctrl-dv"><span>&Delta;v Máximo de Missão (km/s)</span><strong id="lbl-dv">6.50</strong></label>
                 <input type="range" id="ctrl-dv" min="4.0" max="11.0" step="0.25" value="6.5">
+                <span class="ctrl-hint">Orçamento propulsivo mínimo ida e volta NHATS (padrão: &le; 6,50 km/s).</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-dur"><span>Duração Máxima (dias)</span><strong id="lbl-dur">450</strong></label>
+                <label for="ctrl-dur"><span>Duração Máxima de Voo (dias)</span><strong id="lbl-dur">450</strong></label>
                 <input type="range" id="ctrl-dur" min="120" max="450" step="30" value="450">
+                <span class="ctrl-hint">Janela operacional total da trajetória de menor &Delta;v (padrão: &le; 450 d).</span>
               </div>
               <div class="ctrl-group">
                 <label for="ctrl-occ"><span>Incerteza Orbital Máxima (OCC &le;)</span><strong id="lbl-occ">3</strong></label>
                 <input type="range" id="ctrl-occ" min="0" max="9" step="1" value="3">
+                <span class="ctrl-hint">Escala NASA de incerteza efeméride: 0 = órbita precisa a 9 = incerta (padrão: &le; 3).</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-obs"><span>Observações Astrométricas Mín.</span><strong id="lbl-obs">50</strong></label>
+                <label for="ctrl-obs"><span>Observações Astrométricas Mínimas</span><strong id="lbl-obs">50</strong></label>
                 <input type="range" id="ctrl-obs" min="5" max="500" step="5" value="50">
+                <span class="ctrl-hint">Volume mínimo de medições ópticas/radar no SBDB para rastreio seguro (padrão: &ge; 50).</span>
               </div>
               <div class="ctrl-group">
                 <label for="ctrl-diam"><span>Diâmetro Físico Mínimo (m)</span><strong id="lbl-diam">25</strong></label>
                 <input type="range" id="ctrl-diam" min="5" max="400" step="5" value="25">
+                <span class="ctrl-hint">Porte mínimo estimado/medido para operação robótica ou lavra (padrão: &ge; 25 m).</span>
               </div>
               <div class="ctrl-group">
                 <label for="ctrl-grp"><span>Filtro Taxonômico / Mineralógico</span></label>
@@ -1157,26 +1184,32 @@ def export_standalone_custom_dashboard(
                   <option value="Complexo-S">Complexo-S (Silicatados &amp; Rochosos)</option>
                   <option value="Complexo-X/M">Complexo-X/M (Metálicos / Grupo da Platina)</option>
                 </select>
+                <span class="ctrl-hint">Define o foco entre reconhecimento espectral precursor ou extração mineral dedicada.</span>
               </div>
             </div>
 
             <div class="ctrl-col">
               <h3>Pesos Decisórios MCDA-TOPSIS</h3>
+              <p class="ctrl-section-note">Importância relativa na ordenação dos alvos qualificados (normalização automática para soma = 100%):</p>
               <div class="ctrl-group">
                 <label for="ctrl-w1"><span>Peso Eficiência Astrodinâmica (&Delta;v)</span><strong id="lbl-w1">0.40</strong></label>
                 <input type="range" id="ctrl-w1" min="0.05" max="1.0" step="0.05" value="0.40">
+                <span class="ctrl-hint">Prioriza menor energia propulsiva combinada à menor duração de missão.</span>
               </div>
               <div class="ctrl-group">
                 <label for="ctrl-w2"><span>Peso Maturidade da Informação</span><strong id="lbl-w2">0.25</strong></label>
                 <input type="range" id="ctrl-w2" min="0.05" max="1.0" step="0.05" value="0.25">
+                <span class="ctrl-hint">Valoriza arco observacional longo, baixo OCC, espectroscopia e diâmetro medido.</span>
               </div>
               <div class="ctrl-group">
                 <label for="ctrl-w3"><span>Peso Porte Físico Mineral</span><strong id="lbl-w3">0.20</strong></label>
                 <input type="range" id="ctrl-w3" min="0.05" max="1.0" step="0.05" value="0.20">
+                <span class="ctrl-hint">Valoriza maior volume potencial de recursos minerais/voláteis (escala logarítmica).</span>
               </div>
               <div class="ctrl-group">
                 <label for="ctrl-w4"><span>Peso Redundância de Janelas</span><strong id="lbl-w4">0.15</strong></label>
                 <input type="range" id="ctrl-w4" min="0.05" max="1.0" step="0.05" value="0.15">
+                <span class="ctrl-hint">Valoriza quantidade de soluções balísticas alternativas para flexibilidade de lançamento.</span>
               </div>
 
               <div class="ctrl-actions">
