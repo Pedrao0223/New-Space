@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -1059,6 +1060,16 @@ def export_standalone_custom_dashboard(
     data_js_content = f"/* Real Audited NewSpace Dataset Payload (SHA-256 Verified) */\nwindow.NEWSPACE_DATA = {payload_json};\n"
     css_content = build_dashboard_css(PALETTE)
     plotly_bundle_src = Path(plotly.__file__).parent / "package_data" / "plotly.min.js"
+    asset_ver = hashlib.sha256(
+        (
+            css_content
+            + DATA_LOADER_JS
+            + TOPSIS_ENGINE_JS
+            + TABLE_RENDERER_JS
+            + CHART_RENDERER_JS
+            + UI_CONTROLLER_JS
+        ).encode("utf-8")
+    ).hexdigest()[:8]
 
     html = f"""<!DOCTYPE html>
 <html lang="pt-BR">
@@ -1068,14 +1079,14 @@ def export_standalone_custom_dashboard(
 <title>NewSpace Analytics Cockpit — Benchmarking, Tendências &amp; Decisão Multicritério</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="alternate icon" href="{FAVICON_DATA_URI}">
-<link rel="stylesheet" href="assets/css/dashboard.css">
-<script defer src="assets/vendor/plotly.min.js"></script>
-<script defer src="assets/data/dashboard-data.js"></script>
-<script defer src="assets/js/data-loader.js"></script>
-<script defer src="assets/js/topsis-engine.js"></script>
-<script defer src="assets/js/table-renderer.js"></script>
-<script defer src="assets/js/chart-renderer.js"></script>
-<script defer src="assets/js/ui-controller.js"></script>
+<link rel="stylesheet" href="assets/css/dashboard.css?v={asset_ver}">
+<script defer src="assets/vendor/plotly.min.js?v=4.1.1"></script>
+<script defer src="assets/data/dashboard-data.js?v={asset_ver}"></script>
+<script defer src="assets/js/data-loader.js?v={asset_ver}"></script>
+<script defer src="assets/js/topsis-engine.js?v={asset_ver}"></script>
+<script defer src="assets/js/table-renderer.js?v={asset_ver}"></script>
+<script defer src="assets/js/chart-renderer.js?v={asset_ver}"></script>
+<script defer src="assets/js/ui-controller.js?v={asset_ver}"></script>
 </head>
 <body>
 <header>

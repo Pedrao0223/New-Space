@@ -271,6 +271,7 @@ main { padding: clamp(14px, 2.5vw, 22px) clamp(10px, 3vw, 28px); max-width: 1560
   font-size: 13px;
 }
 .action-btn.secondary { background: var(--blue); color: #fff; border: 1px solid var(--cyan); }
+.action-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .mobile-scroll-hint {
   display: none;

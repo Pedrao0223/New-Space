@@ -237,13 +237,15 @@ const plotCalls = {};
 
 function makeEl(id, initialValue = '') {
   const classes = new Set(id === 'tab-sim' ? ['tab-panel', 'active'] : []);
-  return {
+  const el = {
     id,
     value: String(initialValue),
     textContent: '-',
     innerHTML: '',
+    disabled: false,
     offsetParent: id === 'app-error-banner' ? null : {},
     data: null,
+    _fullLayout: null,
     listeners: {},
     classList: {
       add: c => classes.add(c),
@@ -254,8 +256,15 @@ function makeEl(id, initialValue = '') {
     setAttribute: () => {},
     getAttribute: k => (k === 'data-tab' ? 'tab-sim' : null),
     addEventListener: function(ev, fn) { (this.listeners[ev] = this.listeners[ev] || []).push(fn); },
+    querySelector: function(sel) {
+      if (sel === '.plot-container') {
+        return el.innerHTML.includes('plot-container') ? { className: 'plot-container' } : null;
+      }
+      return null;
+    },
     contains: function(other) { return true; }
   };
+  return el;
 }
 
 [
@@ -291,24 +300,38 @@ const sandbox = {
   },
   Plotly: {
     newPlot: (idOrEl, data, layout) => {
-      const id = typeof idOrEl === 'string' ? idOrEl : idOrEl.id;
-      if (!Array.isArray(data) || data.length === 0) throw new Error('Empty data for ' + id);
-      if (!Array.isArray(data[0].x) || data[0].x.length === 0) throw new Error('Non-array x for ' + id);
-      elements[id].data = data;
-      plotCalls[id] = { traces: data.length, xLen: data[0].x.length };
+      const el = typeof idOrEl === 'string' ? elements[idOrEl] : idOrEl;
+      if (!Array.isArray(data) || data.length === 0) throw new Error('Empty data for ' + el.id);
+      if (!Array.isArray(data[0].x) || data[0].x.length === 0) throw new Error('Non-array x for ' + el.id);
+      el.innerHTML = '<div class="plot-container plotly"><svg class="main-svg"></svg></div>';
+      el._fullLayout = { mounted: true };
+      el.data = data;
+      plotCalls[el.id] = { mode: 'newPlot', traces: data.length, xLen: data[0].x.length };
     },
     react: (idOrEl, data, layout) => {
-      const id = typeof idOrEl === 'string' ? idOrEl : idOrEl.id;
+      const el = typeof idOrEl === 'string' ? elements[idOrEl] : idOrEl;
       if (!Array.isArray(data) || !Array.isArray(data[0].x) || data[0].x.length === 0) {
-        throw new Error('Invalid scatter data for ' + id);
+        throw new Error('Invalid scatter data for ' + el.id);
       }
-      elements[id].data = data;
-      plotCalls[id] = { traces: data.length, xLen: data[0].x.length };
+      // Enforce real Plotly DOM invariant: if _fullLayout exists but innerHTML wiped .plot-container, plot vanishes!
+      if (el._fullLayout && !el.innerHTML.includes('plot-container')) {
+        throw new Error('Plotly DOM wiped before Plotly.react on ' + el.id + ' — chart would disappear!');
+      }
+      if (!el._fullLayout) {
+        el.innerHTML = '<div class="plot-container plotly"><svg class="main-svg"></svg></div>';
+        el._fullLayout = { mounted: true };
+      }
+      el.data = data;
+      plotCalls[el.id] = { mode: 'react', traces: data.length, xLen: data[0].x.length };
     },
     relayout: () => {},
     purge: (idOrEl) => {
-      const id = typeof idOrEl === 'string' ? idOrEl : idOrEl.id;
-      if (elements[id]) elements[id].data = null;
+      const el = typeof idOrEl === 'string' ? elements[idOrEl] : idOrEl;
+      if (el) {
+        el.data = null;
+        el._fullLayout = null;
+        el.innerHTML = '';
+      }
     },
     Plots: { resize: () => {} }
   }
@@ -329,7 +352,7 @@ vm.createContext(sandbox);
   vm.runInContext(code, sandbox, { filename: rel });
 });
 
-// 1. Verify zero initialization errors & all 10 plots rendered
+// 1. Verify zero initialization errors & all 10 plots rendered with intact .plot-container
 if (elements['app-error-banner'].classList.contains('visible')) {
   throw new Error('Error banner visible: ' + elements['app-error-banner'].innerHTML);
 }
@@ -338,8 +361,8 @@ const expectedPlots = [
   'plot-trends', 'plot-obs-law', 'plot-corridors-tr', 'plot-corridors-act', 'plot-actuarial-mat'
 ];
 expectedPlots.forEach(pid => {
-  if (!plotCalls[pid] || plotCalls[pid].xLen === 0) {
-    throw new Error('Plot was not rendered with real array data: ' + pid);
+  if (!plotCalls[pid] || plotCalls[pid].xLen === 0 || !elements[pid].innerHTML.includes('plot-container')) {
+    throw new Error('Plot was not rendered with intact DOM container: ' + pid);
   }
 });
 
@@ -351,20 +374,48 @@ if (defaultCountText === '-' || !defaultTop1.includes('Apophis') || rowCount !==
   throw new Error(`Unexpected default state: count=${defaultCountText}, top1=${defaultTop1}, rows=${rowCount}`);
 }
 
-// 3. Verify changing filter & weights dynamically updates KPIs, table, and scatter plot
-elements['ctrl-dv'].value = '5.0';
-elements['ctrl-w1'].value = '0.85';
-sandbox.NewSpaceUIController.recomputeSimulation();
-const strictCountText = elements['kpi-cand-count'].textContent;
-if (strictCountText === defaultCountText || strictCountText === '-') {
-  throw new Error('Changing Δv filter did not update candidate count!');
+// 3. Reproduce exact multi-parameter sequence from user video (93 -> 2 -> 18 -> 1 -> 0 -> 93)
+elements['ctrl-dur'].value = '330';
+(elements['ctrl-dur'].listeners['input'] || [])[0]();
+if (!elements['plot-sim-scatter'].innerHTML.includes('plot-container') || plotCalls['plot-sim-scatter'].xLen !== 2) {
+  throw new Error('Scatter plot vanished or wrong count after changing duration to 330: ' + plotCalls['plot-sim-scatter'].xLen);
 }
 
-// 4. Verify resetDefaults restores exact initial state
-sandbox.NewSpaceUIController.resetDefaults();
-if (elements['kpi-cand-count'].textContent !== defaultCountText) {
-  throw new Error('resetDefaults failed to restore default candidate count!');
+elements['ctrl-dur'].value = '360';
+elements['ctrl-dv'].value = '7.25';
+(elements['ctrl-dv'].listeners['input'] || [])[0]();
+if (!elements['plot-sim-scatter'].innerHTML.includes('plot-container') || plotCalls['plot-sim-scatter'].xLen !== 16) {
+  throw new Error('Scatter plot vanished or wrong count after changing dur=360, dv=7.25: ' + plotCalls['plot-sim-scatter'].xLen);
 }
+
+elements['ctrl-occ'].value = '4';
+elements['ctrl-obs'].value = '180';
+elements['ctrl-diam'].value = '75';
+elements['ctrl-grp'].value = 'KNOWN';
+(elements['ctrl-grp'].listeners['change'] || [])[0]();
+if (!elements['plot-sim-scatter'].innerHTML.includes('plot-container') || plotCalls['plot-sim-scatter'].xLen !== 1) {
+  throw new Error('Scatter plot vanished on single-candidate filter (Apophis)!');
+}
+
+// 4. Empty candidate state -> fallback message & disabled CSV button
+elements['ctrl-grp'].value = 'Complexo-C';
+(elements['ctrl-grp'].listeners['change'] || [])[0]();
+if (!elements['plot-sim-scatter'].innerHTML.includes('plot-empty-state') || !elements['btn-export-csv'].disabled) {
+  throw new Error('Empty filter did not show plot-empty-state or disable CSV export!');
+}
+
+// 5. Recovery from empty state via resetDefaults -> scatter plot cleanly remounted!
+sandbox.NewSpaceUIController.resetDefaults();
+if (
+  elements['kpi-cand-count'].textContent !== defaultCountText ||
+  !elements['plot-sim-scatter'].innerHTML.includes('plot-container') ||
+  plotCalls['plot-sim-scatter'].xLen !== 93 ||
+  elements['btn-export-csv'].disabled
+) {
+  throw new Error('resetDefaults failed to remount scatter plot and restore 93 candidates!');
+}
+
+const strictCountText = '2';
 
 console.log(JSON.stringify({
   ok: true,

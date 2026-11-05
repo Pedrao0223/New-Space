@@ -75,11 +75,14 @@
       return;
     }
 
-    el.innerHTML = '';
     const vw = global.innerWidth || document.documentElement.clientWidth || 1280;
     const isMobile = vw <= 640;
     const isTablet = vw > 640 && vw <= 1024;
     const topPlot = ranked.slice(0, 300);
+    const scores = topPlot.map(function (r) { return r.topsis; });
+    const minScore = Math.min.apply(null, scores);
+    const maxScore = Math.max.apply(null, scores);
+    const equalScores = Math.abs(maxScore - minScore) < 1e-6;
 
     const trace = {
       x: topPlot.map(function (r) { return r.dv; }),
@@ -100,7 +103,9 @@
         size: topPlot.map(function (r) {
           return Math.min(isMobile ? 22 : 30, Math.max(7, Math.log1p(r.diam) * (isMobile ? 3.2 : 4.0)));
         }),
-        color: topPlot.map(function (r) { return r.topsis; }),
+        color: scores,
+        cmin: equalScores ? 0 : minScore,
+        cmax: equalScores ? 100 : maxScore,
         colorscale: [[0, '#23145B'], [0.35, '#09456C'], [0.7, '#026F6E'], [1, '#1CA39E']],
         colorbar: {
           title: { text: isMobile ? 'TOPSIS' : 'Score<br>TOPSIS', font: { size: isMobile ? 10 : 11.5 } },
@@ -123,11 +128,32 @@
         size: isMobile ? 10.5 : (isTablet ? 11.2 : 12)
       },
       margin: { l: isMobile ? 44 : 55, r: isMobile ? 12 : 24, t: 18, b: 46 },
-      xaxis: { title: { text: 'Δv Mínimo NASA NHATS (km/s)' }, gridcolor: '#2A2438', automargin: true },
-      yaxis: { title: { text: 'Duração da Missão (Dias)' }, gridcolor: '#2A2438', automargin: true }
+      xaxis: {
+        title: { text: 'Δv Mínimo NASA NHATS (km/s)' },
+        gridcolor: '#2A2438',
+        automargin: true,
+        autorange: true
+      },
+      yaxis: {
+        title: { text: 'Duração da Missão (Dias)' },
+        gridcolor: '#2A2438',
+        automargin: true,
+        autorange: true
+      }
     };
 
-    global.Plotly.react(el, [trace], layout, PLOT_CONFIG);
+    const hasFallback = String(el.innerHTML || '').indexOf('plot-empty-state') !== -1;
+    const missingPlotDom = typeof el.querySelector === 'function'
+      ? !el.querySelector('.plot-container')
+      : !el._fullLayout;
+
+    if (hasFallback || !el._fullLayout || missingPlotDom) {
+      global.Plotly.purge(el);
+      el.innerHTML = '';
+      global.Plotly.newPlot(el, [trace], layout, PLOT_CONFIG);
+    } else {
+      global.Plotly.react(el, [trace], layout, PLOT_CONFIG);
+    }
   }
 
   function adaptPlotsForViewport(figures, onlyContainerId) {

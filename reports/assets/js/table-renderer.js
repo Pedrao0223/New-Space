@@ -31,6 +31,9 @@
     const top1MetaEl = document.getElementById('kpi-top1-meta');
     const titleEl = document.getElementById('sim-scatter-title');
     const tbody = document.getElementById('tbl-sim-body');
+    const exportBtn = document.getElementById('btn-export-csv');
+
+    if (exportBtn) exportBtn.disabled = ranked.length === 0;
 
     const safeTotal = totalNhatsCount || 1;
     const pct = ((100.0 * ranked.length) / safeTotal).toFixed(2);

@@ -133,11 +133,17 @@
     ];
     rangeIds.forEach(function (id) {
       const el = document.getElementById(id);
-      if (el) el.addEventListener('input', recomputeSimulation);
+      if (el) {
+        el.addEventListener('input', recomputeSimulation);
+        el.addEventListener('change', recomputeSimulation);
+      }
     });
 
     const grpEl = document.getElementById('ctrl-grp');
-    if (grpEl) grpEl.addEventListener('change', recomputeSimulation);
+    if (grpEl) {
+      grpEl.addEventListener('change', recomputeSimulation);
+      grpEl.addEventListener('input', recomputeSimulation);
+    }
 
     const btnExport = document.getElementById('btn-export-csv');
     if (btnExport) btnExport.addEventListener('click', exportFilteredCSV);
