@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import shutil
 
 import ipywidgets as widgets
 import numpy as np
 import pandas as pd
+import plotly
 import plotly.graph_objects as go
 from IPython.display import HTML, clear_output, display
 from plotly.subplots import make_subplots
@@ -30,6 +32,15 @@ from newspace.selection_trends import (
     SelectionDecisionOutput,
     TrendAnalysisSummary,
     apply_selection_criteria_and_topsis,
+)
+from newspace.web_assets import (
+    CHART_RENDERER_JS,
+    DATA_LOADER_JS,
+    TABLE_RENDERER_JS,
+    TOPSIS_ENGINE_JS,
+    UI_CONTROLLER_JS,
+    build_dashboard_css,
+    figure_to_pure_dict,
 )
 
 
@@ -918,6 +929,42 @@ def create_notebook_interactive_cockpit(datasets: MinedDatasets) -> widgets.VBox
     return widgets.VBox([header, grid_controls, out_area])
 
 
+def _write_modular_dashboard_bundle(
+    target_dir: Path,
+    html_filename: str,
+    html_content: str,
+    css_content: str,
+    data_js_content: str,
+    plotly_bundle_src: Path,
+) -> Path:
+    """Write modular HTML, CSS, local Plotly vendor bundle, data module, and JS modules."""
+    target_dir.mkdir(parents=True, exist_ok=True)
+    css_dir = target_dir / "assets" / "css"
+    js_dir = target_dir / "assets" / "js"
+    data_dir = target_dir / "assets" / "data"
+    vendor_dir = target_dir / "assets" / "vendor"
+
+    for folder in (css_dir, js_dir, data_dir, vendor_dir):
+        folder.mkdir(parents=True, exist_ok=True)
+
+    (target_dir / "favicon.svg").write_text(FAVICON_SVG, encoding="utf-8")
+    (css_dir / "dashboard.css").write_text(css_content, encoding="utf-8")
+    (data_dir / "dashboard-data.js").write_text(data_js_content, encoding="utf-8")
+    (js_dir / "data-loader.js").write_text(DATA_LOADER_JS, encoding="utf-8")
+    (js_dir / "topsis-engine.js").write_text(TOPSIS_ENGINE_JS, encoding="utf-8")
+    (js_dir / "table-renderer.js").write_text(TABLE_RENDERER_JS, encoding="utf-8")
+    (js_dir / "chart-renderer.js").write_text(CHART_RENDERER_JS, encoding="utf-8")
+    (js_dir / "ui-controller.js").write_text(UI_CONTROLLER_JS, encoding="utf-8")
+
+    vendor_dst = vendor_dir / "plotly.min.js"
+    if plotly_bundle_src.exists():
+        shutil.copyfile(plotly_bundle_src, vendor_dst)
+
+    html_path = target_dir / html_filename
+    html_path.write_text(html_content, encoding="utf-8")
+    return html_path
+
+
 def export_standalone_custom_dashboard(
     datasets: MinedDatasets,
     bench: BenchmarkSuiteResults,
@@ -925,20 +972,18 @@ def export_standalone_custom_dashboard(
     selection: SelectionDecisionOutput,
     reports_dir: Path = REPORTS_DIR,
 ) -> Path:
-    """Export interactive, overlap-free, proportionally styled HTML5 cockpit + sync to docs/."""
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    out_path = reports_dir / "newspace_dashboard.html"
-    (reports_dir / "favicon.svg").write_text(FAVICON_SVG, encoding="utf-8")
-
-    # Dedicated individual proportional figures for responsive 2-column CSS grid
-    f_eng_lat_json = fig_engine_latency_card(bench).to_json()
-    f_eng_sto_json = fig_storage_footprint_card(bench).to_json()
-    f_ml_clf_json = fig_ml_classifiers_card(bench).to_json()
-    f_ml_imp_json = fig_risk_factors_card(bench).to_json()
-    f_tr_json = fig_information_trends(trends).to_json()
-    f_obs_json = fig_observability_card(trends).to_json()
-    f_cor_json = fig_corridors_card(datasets).to_json()
-    f_ac_json = fig_actuarial_scenarios_matrix(selection).to_json()
+    """Export modular, responsive HTML5 cockpit with pure JSON data + sync to docs/."""
+    # Convert all 8 static analytical figures into pure JSON dicts (zero binary bdata!)
+    figures_payload = {
+        "engLat": figure_to_pure_dict(fig_engine_latency_card(bench)),
+        "engSto": figure_to_pure_dict(fig_storage_footprint_card(bench)),
+        "mlClf": figure_to_pure_dict(fig_ml_classifiers_card(bench)),
+        "mlImp": figure_to_pure_dict(fig_risk_factors_card(bench)),
+        "trends": figure_to_pure_dict(fig_information_trends(trends)),
+        "obsLaw": figure_to_pure_dict(fig_observability_card(trends)),
+        "corridors": figure_to_pure_dict(fig_corridors_card(datasets)),
+        "actuarialMat": figure_to_pure_dict(fig_actuarial_scenarios_matrix(selection)),
+    }
 
     # Formatted proportional Era Comparison HTML table for Tab 2
     era_html_table = _render_proportional_html_table(
@@ -1002,201 +1047,35 @@ def export_standalone_custom_dashboard(
     best_eng = bench.engine_summary.iloc[0]
     fc_2030 = trends.forecast_2030[trends.forecast_2030["ano"] == 2030].iloc[0]
 
+    dashboard_payload = {
+        "meta": {
+            "totalAuditedRecords": int(total_records),
+            "nhatsAccessibleCount": len(client_records),
+        },
+        "nhatsRecords": client_records,
+        "figures": figures_payload,
+    }
+    payload_json = json.dumps(dashboard_payload, ensure_ascii=False, allow_nan=False)
+    data_js_content = f"/* Real Audited NewSpace Dataset Payload (SHA-256 Verified) */\nwindow.NEWSPACE_DATA = {payload_json};\n"
+    css_content = build_dashboard_css(PALETTE)
+    plotly_bundle_src = Path(plotly.__file__).parent / "package_data" / "plotly.min.js"
+
     html = f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NewSpace Analytics Cockpit — Benchmarking, Tendências & Decisão Multicritério</title>
+<title>NewSpace Analytics Cockpit — Benchmarking, Tendências &amp; Decisão Multicritério</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="alternate icon" href="{FAVICON_DATA_URI}">
-<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-<style>
-  :root {{
-    --bg: {PALETTE.cosmic_bg};
-    --violet: {PALETTE.space_violet};
-    --blue: {PALETTE.orbital_blue};
-    --teal: {PALETTE.deep_teal};
-    --cyan: {PALETTE.vibrant_cyan};
-    --text: {PALETTE.text_primary};
-    --muted: {PALETTE.text_muted};
-  }}
-  * {{ box-sizing: border-box; }}
-  html {{ -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }}
-  body {{
-    margin: 0; background: var(--bg); color: var(--text);
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    overflow-x: hidden;
-  }}
-  header {{
-    background: linear-gradient(90deg, var(--bg) 0%, var(--violet) 48%, var(--blue) 100%);
-    border-bottom: 2px solid var(--cyan);
-    padding: clamp(12px, 2.2vw, 16px) clamp(14px, 3vw, 28px);
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
-  }}
-  .brand-wrap {{ display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 280px; }}
-  .brand-logo {{ width: clamp(34px, 6vw, 42px); height: clamp(34px, 6vw, 42px); flex-shrink: 0; }}
-  .brand-logo svg {{ width: 100%; height: 100%; display: block; }}
-  .brand-text {{ min-width: 0; }}
-  .brand-title {{ font-size: clamp(14.5px, 2.4vw, 20px); font-weight: 800; letter-spacing: 0.02em; line-height: 1.22; }}
-  .brand-sub {{ font-size: clamp(11px, 1.8vw, 12px); color: #cbd5e1; margin-top: 3px; line-height: 1.35; }}
-  .header-right {{ display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }}
-  .palette-pills {{ display: flex; gap: 6px; align-items: center; font-size: 11px; color: #cbd5e1; }}
-  .swatch {{ width: 15px; height: 15px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.4); }}
-  .report-btn {{
-    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    min-height: 40px;
-    background: rgba(28, 163, 158, 0.20); color: #fff; border: 1px solid var(--cyan);
-    padding: 8px 15px; border-radius: 8px; text-decoration: none; font-size: 12.5px; font-weight: 700;
-    transition: all 0.15s; white-space: nowrap;
-  }}
-  .report-btn:hover {{ background: var(--cyan); color: #06181c; }}
-  nav.tabs {{
-    display: flex; gap: 8px;
-    padding: clamp(10px, 2vw, 12px) clamp(12px, 3vw, 28px);
-    background: #1c1124; border-bottom: 1px solid #2d223b; flex-wrap: wrap;
-  }}
-  .tab-btn {{
-    display: inline-flex; align-items: center; justify-content: center; text-align: center;
-    min-height: 42px; line-height: 1.25;
-    background: rgba(35, 20, 91, 0.55); color: var(--text); border: 1px solid rgba(28, 163, 158, 0.35);
-    padding: 9px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.15s;
-  }}
-  .tab-btn:hover {{ background: var(--blue); }}
-  .tab-btn.active {{ background: var(--cyan); color: #091318; border-color: #fff; font-weight: 800; }}
-  main {{ padding: clamp(14px, 2.5vw, 22px) clamp(10px, 3vw, 28px); max-width: 1560px; margin: 0 auto; }}
-  .tab-panel {{ display: none; }}
-  .tab-panel.active {{ display: block; }}
-  .kpi-row {{
-    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: clamp(10px, 1.8vw, 14px); margin-bottom: clamp(14px, 2.2vw, 20px);
-  }}
-  .kpi-row.kpi-3 {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
-  .kpi {{
-    min-width: 0;
-    background: linear-gradient(135deg, rgba(35,20,91,0.75), rgba(9,69,108,0.65));
-    border: 1px solid rgba(28,163,158,0.42); border-radius: 10px;
-    padding: clamp(12px, 2vw, 14px) clamp(12px, 2.2vw, 18px);
-  }}
-  .kpi .lbl {{ font-size: clamp(10px, 1.7vw, 11px); color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.3; }}
-  .kpi .val {{ font-size: clamp(18px, 3vw, 23px); font-weight: 800; color: var(--cyan); margin-top: 4px; line-height: 1.2; word-break: break-word; }}
-  .kpi .val.val-compact {{ font-size: clamp(14.5px, 2.2vw, 18.5px); }}
-  .kpi .hint {{ font-size: clamp(10.8px, 1.8vw, 11.5px); color: #cbd5e1; margin-top: 4px; line-height: 1.3; }}
-  .grid-2 {{
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(14px, 2vw, 20px); margin-bottom: clamp(14px, 2vw, 20px);
-  }}
-  .grid-2 > *, .sim-layout > * {{ min-width: 0; }}
-  .chart-card {{
-    min-width: 0;
-    background: #1D1226; border: 1px solid rgba(28,163,158,0.28); border-radius: 12px;
-    padding: clamp(12px, 2vw, 16px); margin-bottom: clamp(14px, 2vw, 20px);
-    box-shadow: 0 10px 26px rgba(0,0,0,0.35);
-    overflow: hidden;
-  }}
-  .grid-2 .chart-card {{ margin-bottom: 0; }}
-  .section-subtitle {{
-    margin: 2px 2px 10px; color: var(--cyan);
-    font-size: clamp(13.5px, 2.2vw, 15.5px); font-weight: 700; line-height: 1.35;
-  }}
-  .plot-box {{ width: 100%; min-height: 320px; }}
-  .sim-layout {{ display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 20px; align-items: start; }}
-  .control-box {{
-    min-width: 0;
-    background: linear-gradient(180deg, rgba(35,20,91,0.78), rgba(22,13,24,0.95));
-    border: 1px solid var(--cyan); border-radius: 12px; padding: clamp(14px, 2.4vw, 18px);
-  }}
-  .mobile-filter-toggle {{
-    display: none; width: 100%; align-items: center; justify-content: space-between;
-    background: rgba(28, 163, 158, 0.18); color: #fff; border: 1px solid var(--cyan);
-    border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 700; cursor: pointer;
-    min-height: 44px;
-  }}
-  .ctrl-body.collapsed {{ display: none; }}
-  .ctrl-columns {{ display: grid; grid-template-columns: 1fr; gap: 16px; }}
-  .ctrl-col {{ min-width: 0; }}
-  .control-box h3 {{ margin: 0 0 12px; font-size: 14.5px; color: var(--cyan); border-bottom: 1px solid rgba(28,163,158,0.3); padding-bottom: 6px; }}
-  .ctrl-group {{ margin-bottom: 12px; }}
-  .ctrl-group label {{ display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 12px; margin-bottom: 5px; color: #e2e8f0; }}
-  .ctrl-group input[type=range] {{ width: 100%; accent-color: var(--cyan); height: 26px; cursor: pointer; }}
-  .ctrl-group select {{
-    width: 100%; background: var(--bg); color: #fff; border: 1px solid var(--teal);
-    padding: 8px 10px; border-radius: 6px; min-height: 40px; font-size: 13px;
-  }}
-  .ctrl-actions {{ display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }}
-  .action-btn {{
-    width: 100%; min-height: 42px; padding: 10px 12px; background: var(--cyan); color: #07191e; border: none;
-    border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 13px;
-  }}
-  .action-btn.secondary {{ background: var(--blue); color: #fff; border: 1px solid var(--cyan); }}
-  .mobile-scroll-hint {{
-    display: none; font-size: 11px; color: var(--cyan); margin: 2px 2px 8px; font-weight: 600;
-  }}
-  .table-wrap {{
-    width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
-    border-radius: 8px; border: 1px solid rgba(28, 163, 158, 0.22);
-  }}
-  .table-scroll-y {{ max-height: 410px; overflow-y: auto; }}
-  table.ranking-tbl, table.data-table {{ width: 100%; border-collapse: collapse; font-size: clamp(11.8px, 2vw, 12.8px); }}
-  table.ranking-tbl th, table.data-table th {{
-    background: var(--blue); color: #fff; padding: 10px 12px; font-weight: 700; position: sticky; top: 0; z-index: 2;
-    border-bottom: 2px solid var(--cyan); white-space: nowrap;
-  }}
-  table.ranking-tbl td, table.data-table td {{
-    padding: 8.5px 12px; border-bottom: 1px solid rgba(148,163,184,0.16); vertical-align: middle;
-  }}
-  .txt-col {{ text-align: left; }}
-  .num-col {{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }}
-  table.ranking-tbl tr:nth-child(even), table.data-table tr:nth-child(even) {{ background: rgba(35,20,91,0.22); }}
-  table.ranking-tbl tr:hover, table.data-table tr:hover {{ background: rgba(28,163,158,0.14); }}
-
-  /* Tablet Landscape & Portrait (<= 1080px) */
-  @media (max-width: 1080px) {{
-    .sim-layout {{ grid-template-columns: 1fr; }}
-    .ctrl-columns {{ grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }}
-    nav.tabs {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-    .tab-btn {{ width: 100%; }}
-  }}
-
-  /* Tablet Portrait & Phablets (<= 960px) */
-  @media (max-width: 960px) {{
-    .grid-2 {{ grid-template-columns: 1fr; }}
-    .kpi-row, .kpi-row.kpi-3 {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-    .kpi-row.kpi-3 .kpi:last-child {{ grid-column: 1 / -1; }}
-    .mobile-scroll-hint {{ display: block; }}
-    table.ranking-tbl th:first-child, table.ranking-tbl td:first-child,
-    table.data-table th:first-child, table.data-table td:first-child {{
-      position: sticky; left: 0; z-index: 3;
-      box-shadow: 2px 0 6px rgba(0, 0, 0, 0.45);
-    }}
-    table.ranking-tbl th:first-child, table.data-table th:first-child {{ background: var(--blue); z-index: 4; }}
-    table.ranking-tbl td:first-child, table.data-table td:first-child {{ background: #1d1226; }}
-    table.ranking-tbl tr:nth-child(even) td:first-child,
-    table.data-table tr:nth-child(even) td:first-child {{ background: #211536; }}
-  }}
-
-  /* Smartphones (<= 640px) */
-  @media (max-width: 640px) {{
-    .header-right {{ width: 100%; justify-content: space-between; }}
-    .palette-pills {{ display: none; }}
-    .report-btn {{ width: 100%; min-height: 44px; font-size: 13px; }}
-    .tab-btn {{ font-size: 12px; padding: 8px 10px; min-height: 46px; }}
-    .mobile-filter-toggle {{ display: flex; }}
-    .ctrl-body {{ margin-top: 14px; }}
-    .ctrl-columns {{ grid-template-columns: 1fr; gap: 14px; }}
-    .ctrl-group select {{ font-size: 16px; }} /* Prevents iOS Safari auto-zoom on tap */
-    .ctrl-group input[type=range] {{ height: 32px; }}
-    table.ranking-tbl th, table.ranking-tbl td,
-    table.data-table th, table.data-table td {{ padding: 8px 9px; }}
-  }}
-
-  /* Compact Smartphones (<= 380px) */
-  @media (max-width: 380px) {{
-    nav.tabs {{ grid-template-columns: 1fr; }}
-    .kpi-row, .kpi-row.kpi-3 {{ grid-template-columns: 1fr; }}
-    .kpi-row.kpi-3 .kpi:last-child {{ grid-column: auto; }}
-  }}
-</style>
+<link rel="stylesheet" href="assets/css/dashboard.css">
+<script defer src="assets/vendor/plotly.min.js"></script>
+<script defer src="assets/data/dashboard-data.js"></script>
+<script defer src="assets/js/data-loader.js"></script>
+<script defer src="assets/js/topsis-engine.js"></script>
+<script defer src="assets/js/table-renderer.js"></script>
+<script defer src="assets/js/chart-renderer.js"></script>
+<script defer src="assets/js/ui-controller.js"></script>
 </head>
 <body>
 <header>
@@ -1221,13 +1100,15 @@ def export_standalone_custom_dashboard(
 </header>
 
 <nav class="tabs">
-  <button class="tab-btn active" onclick="switchTab('tab-sim', this)">1. Simulador Customizável TOPSIS (Prospecção)</button>
-  <button class="tab-btn" onclick="switchTab('tab-trends', this)">2. Tendência de Produção de Informações (1957–2030)</button>
-  <button class="tab-btn" onclick="switchTab('tab-bench', this)">3. Benchmarking da Mineração &amp; Motores</button>
-  <button class="tab-btn" onclick="switchTab('tab-actuarial', this)">4. Corredores Orbitais &amp; Matriz Atuarial</button>
+  <button type="button" class="tab-btn active" data-tab="tab-sim">1. Simulador Customizável TOPSIS (Prospecção)</button>
+  <button type="button" class="tab-btn" data-tab="tab-trends">2. Tendência de Produção de Informações (1957–2030)</button>
+  <button type="button" class="tab-btn" data-tab="tab-bench">3. Benchmarking da Mineração &amp; Motores</button>
+  <button type="button" class="tab-btn" data-tab="tab-actuarial">4. Corredores Orbitais &amp; Matriz Atuarial</button>
 </nav>
 
 <main>
+  <div id="app-error-banner" class="error-banner" role="alert"></div>
+
   <!-- TAB 1: CUSTOMIZABLE INTERACTIVE SIMULATOR -->
   <section id="tab-sim" class="tab-panel active">
     <div class="kpi-row">
@@ -1239,7 +1120,7 @@ def export_standalone_custom_dashboard(
 
     <div class="sim-layout">
       <aside class="control-box">
-        <button type="button" class="mobile-filter-toggle" id="btn-filter-toggle" onclick="toggleMobileFilters()" aria-expanded="true">
+        <button type="button" class="mobile-filter-toggle" id="btn-filter-toggle" aria-expanded="true">
           <span>Ajustar Critérios &amp; Pesos TOPSIS</span>
           <span id="filter-toggle-icon">&#9652; Ocultar</span>
         </button>
@@ -1248,28 +1129,28 @@ def export_standalone_custom_dashboard(
             <div class="ctrl-col">
               <h3>Critérios de Seleção de Dados</h3>
               <div class="ctrl-group">
-                <label><span>&Delta;v Máximo de Missão (km/s)</span><strong id="lbl-dv">6.50</strong></label>
-                <input type="range" id="ctrl-dv" min="4.0" max="11.0" step="0.25" value="6.5" oninput="recomputeTOPSIS()">
+                <label for="ctrl-dv"><span>&Delta;v Máximo de Missão (km/s)</span><strong id="lbl-dv">6.50</strong></label>
+                <input type="range" id="ctrl-dv" min="4.0" max="11.0" step="0.25" value="6.5">
               </div>
               <div class="ctrl-group">
-                <label><span>Duração Máxima (dias)</span><strong id="lbl-dur">450</strong></label>
-                <input type="range" id="ctrl-dur" min="120" max="450" step="30" value="450" oninput="recomputeTOPSIS()">
+                <label for="ctrl-dur"><span>Duração Máxima (dias)</span><strong id="lbl-dur">450</strong></label>
+                <input type="range" id="ctrl-dur" min="120" max="450" step="30" value="450">
               </div>
               <div class="ctrl-group">
-                <label><span>Incerteza Orbital Máxima (OCC &le;)</span><strong id="lbl-occ">3</strong></label>
-                <input type="range" id="ctrl-occ" min="0" max="9" step="1" value="3" oninput="recomputeTOPSIS()">
+                <label for="ctrl-occ"><span>Incerteza Orbital Máxima (OCC &le;)</span><strong id="lbl-occ">3</strong></label>
+                <input type="range" id="ctrl-occ" min="0" max="9" step="1" value="3">
               </div>
               <div class="ctrl-group">
-                <label><span>Observações Astrométricas Mín.</span><strong id="lbl-obs">50</strong></label>
-                <input type="range" id="ctrl-obs" min="5" max="500" step="5" value="50" oninput="recomputeTOPSIS()">
+                <label for="ctrl-obs"><span>Observações Astrométricas Mín.</span><strong id="lbl-obs">50</strong></label>
+                <input type="range" id="ctrl-obs" min="5" max="500" step="5" value="50">
               </div>
               <div class="ctrl-group">
-                <label><span>Diâmetro Físico Mínimo (m)</span><strong id="lbl-diam">25</strong></label>
-                <input type="range" id="ctrl-diam" min="5" max="400" step="5" value="25" oninput="recomputeTOPSIS()">
+                <label for="ctrl-diam"><span>Diâmetro Físico Mínimo (m)</span><strong id="lbl-diam">25</strong></label>
+                <input type="range" id="ctrl-diam" min="5" max="400" step="5" value="25">
               </div>
               <div class="ctrl-group">
-                <label><span>Filtro Taxonômico / Mineralógico</span></label>
-                <select id="ctrl-grp" onchange="recomputeTOPSIS()">
+                <label for="ctrl-grp"><span>Filtro Taxonômico / Mineralógico</span></label>
+                <select id="ctrl-grp">
                   <option value="ALL">Todos os Grupos (Incluindo Alvos p/ Sonda Precursora)</option>
                   <option value="KNOWN">Apenas Espectrografados Confirmados pela NASA</option>
                   <option value="Complexo-C">Complexo-C (Voláteis &amp; Água ISRU)</option>
@@ -1282,25 +1163,25 @@ def export_standalone_custom_dashboard(
             <div class="ctrl-col">
               <h3>Pesos Decisórios MCDA-TOPSIS</h3>
               <div class="ctrl-group">
-                <label><span>Peso Eficiência Astrodinâmica (&Delta;v)</span><strong id="lbl-w1">0.40</strong></label>
-                <input type="range" id="ctrl-w1" min="0.05" max="1.0" step="0.05" value="0.40" oninput="recomputeTOPSIS()">
+                <label for="ctrl-w1"><span>Peso Eficiência Astrodinâmica (&Delta;v)</span><strong id="lbl-w1">0.40</strong></label>
+                <input type="range" id="ctrl-w1" min="0.05" max="1.0" step="0.05" value="0.40">
               </div>
               <div class="ctrl-group">
-                <label><span>Peso Maturidade da Informação</span><strong id="lbl-w2">0.25</strong></label>
-                <input type="range" id="ctrl-w2" min="0.05" max="1.0" step="0.05" value="0.25" oninput="recomputeTOPSIS()">
+                <label for="ctrl-w2"><span>Peso Maturidade da Informação</span><strong id="lbl-w2">0.25</strong></label>
+                <input type="range" id="ctrl-w2" min="0.05" max="1.0" step="0.05" value="0.25">
               </div>
               <div class="ctrl-group">
-                <label><span>Peso Porte Físico Mineral</span><strong id="lbl-w3">0.20</strong></label>
-                <input type="range" id="ctrl-w3" min="0.05" max="1.0" step="0.05" value="0.20" oninput="recomputeTOPSIS()">
+                <label for="ctrl-w3"><span>Peso Porte Físico Mineral</span><strong id="lbl-w3">0.20</strong></label>
+                <input type="range" id="ctrl-w3" min="0.05" max="1.0" step="0.05" value="0.20">
               </div>
               <div class="ctrl-group">
-                <label><span>Peso Redundância de Janelas</span><strong id="lbl-w4">0.15</strong></label>
-                <input type="range" id="ctrl-w4" min="0.05" max="1.0" step="0.05" value="0.15" oninput="recomputeTOPSIS()">
+                <label for="ctrl-w4"><span>Peso Redundância de Janelas</span><strong id="lbl-w4">0.15</strong></label>
+                <input type="range" id="ctrl-w4" min="0.05" max="1.0" step="0.05" value="0.15">
               </div>
 
               <div class="ctrl-actions">
-                <button class="action-btn" onclick="exportFilteredCSV()">Exportar Seleção Qualificada (CSV)</button>
-                <button class="action-btn secondary" onclick="resetDefaults()">Restaurar Critérios Padrão da Equipe</button>
+                <button type="button" class="action-btn" id="btn-export-csv">Exportar Seleção Qualificada (CSV)</button>
+                <button type="button" class="action-btn secondary" id="btn-reset-defaults">Restaurar Critérios Padrão da Equipe</button>
               </div>
             </div>
           </div>
@@ -1408,394 +1289,27 @@ def export_standalone_custom_dashboard(
     </div>
   </section>
 </main>
-
-<script>
-const NHATS_DATA = {json.dumps(client_records, ensure_ascii=False)};
-const SPEC_ENG_LAT = {f_eng_lat_json};
-const SPEC_ENG_STO = {f_eng_sto_json};
-const SPEC_ML_CLF = {f_ml_clf_json};
-const SPEC_ML_IMP = {f_ml_imp_json};
-const SPEC_TR = {f_tr_json};
-const SPEC_OBS = {f_obs_json};
-const SPEC_COR = {f_cor_json};
-const SPEC_AC = {f_ac_json};
-
-const MAX_ENG_LAT = Math.max(...SPEC_ENG_LAT.data[0].x);
-const MAX_ENG_STO = Math.max(...SPEC_ENG_STO.data[0].x);
-const MAX_ML_IMP = Math.max(...SPEC_ML_IMP.data[0].x);
-const ORIG_TR_ANNOTATIONS = (SPEC_TR.layout.annotations || []).map(a => ({{...a, font: {{...(a.font || {{}})}}}}));
-
-let currentRanked = [];
-let resizeTimer = null;
-
-function cloneLayout(lay) {{
-  const copy = JSON.parse(JSON.stringify(lay));
-  copy.title = {{text: ''}};
-  return copy;
-}}
-
-function renderStaticPlots() {{
-  const cfg = {{responsive: true, displaylogo: false}};
-  Plotly.newPlot('plot-eng-lat', SPEC_ENG_LAT.data, cloneLayout(SPEC_ENG_LAT.layout), cfg);
-  Plotly.newPlot('plot-eng-sto', SPEC_ENG_STO.data, cloneLayout(SPEC_ENG_STO.layout), cfg);
-  Plotly.newPlot('plot-ml-clf', SPEC_ML_CLF.data, cloneLayout(SPEC_ML_CLF.layout), cfg);
-  Plotly.newPlot('plot-ml-imp', SPEC_ML_IMP.data, cloneLayout(SPEC_ML_IMP.layout), cfg);
-  Plotly.newPlot('plot-trends', SPEC_TR.data, cloneLayout(SPEC_TR.layout), cfg);
-  Plotly.newPlot('plot-obs-law', SPEC_OBS.data, cloneLayout(SPEC_OBS.layout), cfg);
-  Plotly.newPlot('plot-corridors-tr', JSON.parse(JSON.stringify(SPEC_COR.data)), cloneLayout(SPEC_COR.layout), cfg);
-  Plotly.newPlot('plot-corridors-act', JSON.parse(JSON.stringify(SPEC_COR.data)), cloneLayout(SPEC_COR.layout), cfg);
-  Plotly.newPlot('plot-actuarial-mat', SPEC_AC.data, cloneLayout(SPEC_AC.layout), cfg);
-}}
-
-function adaptPlotsForViewport(onlyContainerId = null) {{
-  const vw = window.innerWidth || document.documentElement.clientWidth || 1280;
-  const isMobile = vw <= 640;
-  const isTablet = vw > 640 && vw <= 1024;
-  const baseFont = isMobile ? 10.5 : (isTablet ? 11.2 : 12);
-  const stdHeight = isMobile ? 345 : (isTablet ? 385 : 415);
-
-  const legendTop = {{
-    orientation: 'h',
-    x: 0,
-    xanchor: 'left',
-    y: 1.03,
-    yanchor: 'bottom',
-    font: {{size: isMobile ? 10 : 11.2}}
-  }};
-
-  const updates = {{
-    'plot-eng-lat': {{
-      height: stdHeight,
-      'font.size': baseFont,
-      margin: {{l: 14, r: isMobile ? 16 : 24, t: 16, b: 42}},
-      'xaxis.range': [0, MAX_ENG_LAT * (isMobile ? 1.62 : (isTablet ? 1.42 : 1.32))]
-    }},
-    'plot-eng-sto': {{
-      height: stdHeight,
-      'font.size': baseFont,
-      margin: {{l: 14, r: isMobile ? 16 : 24, t: 16, b: 42}},
-      'xaxis.range': [0, MAX_ENG_STO * (isMobile ? 1.65 : (isTablet ? 1.44 : 1.34))]
-    }},
-    'plot-ml-clf': {{
-      height: isMobile ? 365 : stdHeight,
-      'font.size': baseFont,
-      margin: {{l: 18, r: 16, t: isMobile ? 54 : 42, b: isMobile ? 64 : 44}},
-      'xaxis.tickangle': isMobile ? -32 : (isTablet ? -18 : 0),
-      legend: legendTop
-    }},
-    'plot-ml-imp': {{
-      height: isMobile ? 375 : stdHeight,
-      'font.size': baseFont,
-      margin: {{l: 14, r: isMobile ? 16 : 24, t: 16, b: 42}},
-      'xaxis.range': [0, MAX_ML_IMP * (isMobile ? 1.48 : (isTablet ? 1.32 : 1.25))]
-    }},
-    'plot-obs-law': {{
-      height: stdHeight,
-      'font.size': baseFont,
-      margin: {{l: 18, r: 16, t: 18, b: isMobile ? 52 : 42}},
-      'xaxis.tickangle': isMobile ? -35 : 0
-    }},
-    'plot-corridors-tr': {{
-      height: isMobile ? 370 : stdHeight,
-      'font.size': baseFont,
-      margin: {{l: 18, r: 16, t: isMobile ? 56 : 42, b: isMobile ? 68 : 48}},
-      'xaxis.tickangle': isMobile ? -35 : -18,
-      legend: legendTop
-    }},
-    'plot-corridors-act': {{
-      height: isMobile ? 370 : stdHeight,
-      'font.size': baseFont,
-      margin: {{l: 18, r: 16, t: isMobile ? 56 : 42, b: isMobile ? 68 : 48}},
-      'xaxis.tickangle': isMobile ? -35 : -18,
-      legend: legendTop
-    }},
-    'plot-actuarial-mat': {{
-      height: isMobile ? 370 : stdHeight,
-      'font.size': baseFont,
-      margin: {{l: 18, r: 16, t: isMobile ? 58 : 44, b: 46}},
-      legend: legendTop
-    }},
-    'plot-sim-scatter': {{
-      height: isMobile ? 355 : (isTablet ? 420 : 460),
-      'font.size': baseFont,
-      margin: {{l: isMobile ? 44 : 55, r: isMobile ? 12 : 24, t: 18, b: 46}}
-    }}
-  }};
-
-  // Responsive subplot titles and legend placement for 3-panel Trends chart
-  const trAnn = ORIG_TR_ANNOTATIONS.map((a, idx) => {{
-    const copy = JSON.parse(JSON.stringify(a));
-    if (idx === 0) {{
-      copy.text = isMobile
-        ? '1. Produção Anual de Telemetria & Objetos em Órbita<br>(NORAD SATCAT, 1957–2025)'
-        : a.text;
-      copy.font = {{...(copy.font || {{}}), size: isMobile ? 10.8 : 13}};
-    }} else if (idx === 1) {{
-      copy.text = isMobile
-        ? '2. Descobertas Anuais de Asteroides Próximos à Terra<br>(NASA JPL SBDB)'
-        : a.text;
-      copy.font = {{...(copy.font || {{}}), size: isMobile ? 10.8 : 13}};
-    }} else if (idx === 2) {{
-      copy.text = isMobile
-        ? '3. Índice Composto de Produção de Informações (Base 2010=100)<br>+ Projeção 2030 (IC 95%)'
-        : a.text;
-      copy.font = {{...(copy.font || {{}}), size: isMobile ? 10.8 : 13}};
-    }} else {{
-      copy.font = {{...(copy.font || {{}}), size: isMobile ? 9.5 : 11}};
-      copy.ax = isMobile ? -55 : -90;
-    }}
-    return copy;
-  }});
-
-  updates['plot-trends'] = {{
-    height: isMobile ? 740 : (isTablet ? 750 : 770),
-    'font.size': baseFont,
-    annotations: trAnn,
-    margin: isMobile
-      ? {{l: 34, r: 14, t: 42, b: 122}}
-      : {{l: 42, r: 24, t: 68, b: 46}},
-    legend: isMobile
-      ? {{orientation: 'h', x: 0, xanchor: 'left', y: -0.07, yanchor: 'top', font: {{size: 10}}}}
-      : {{orientation: 'h', x: 0, xanchor: 'left', y: 1.04, yanchor: 'bottom', font: {{size: 11.2}}}}
-  }};
-
-  const root = onlyContainerId ? document.getElementById(onlyContainerId) : document;
-  if (!root) return;
-
-  Object.keys(updates).forEach(plotId => {{
-    const el = document.getElementById(plotId);
-    if (!el || !root.contains(el) || !el.data) return;
-    if (el.offsetParent === null) return; // Skip hidden tabs until activated
-    Plotly.relayout(el, updates[plotId]);
-    Plotly.Plots.resize(el);
-  }});
-}}
-
-function toggleMobileFilters() {{
-  const body = document.getElementById('ctrl-body');
-  const icon = document.getElementById('filter-toggle-icon');
-  const btn = document.getElementById('btn-filter-toggle');
-  const collapsed = body.classList.toggle('collapsed');
-  btn.setAttribute('aria-expanded', String(!collapsed));
-  icon.innerHTML = collapsed ? '&#9662; Mostrar' : '&#9652; Ocultar';
-}}
-
-function switchTab(tabId, btn) {{
-  document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  btn.classList.add('active');
-  requestAnimationFrame(() => adaptPlotsForViewport(tabId));
-}}
-
-function recomputeTOPSIS() {{
-  const vw = window.innerWidth || document.documentElement.clientWidth || 1280;
-  const isMobile = vw <= 640;
-  const isTablet = vw > 640 && vw <= 1024;
-
-  const maxDv = parseFloat(document.getElementById('ctrl-dv').value);
-  const maxDur = parseInt(document.getElementById('ctrl-dur').value);
-  const maxOcc = parseInt(document.getElementById('ctrl-occ').value);
-  const minObs = parseInt(document.getElementById('ctrl-obs').value);
-  const minDiam = parseFloat(document.getElementById('ctrl-diam').value);
-  const grpFilter = document.getElementById('ctrl-grp').value;
-
-  const w1 = parseFloat(document.getElementById('ctrl-w1').value);
-  const w2 = parseFloat(document.getElementById('ctrl-w2').value);
-  const w3 = parseFloat(document.getElementById('ctrl-w3').value);
-  const w4 = parseFloat(document.getElementById('ctrl-w4').value);
-
-  document.getElementById('lbl-dv').textContent = maxDv.toFixed(2);
-  document.getElementById('lbl-dur').textContent = maxDur;
-  document.getElementById('lbl-occ').textContent = maxOcc;
-  document.getElementById('lbl-obs').textContent = minObs;
-  document.getElementById('lbl-diam').textContent = minDiam;
-  document.getElementById('lbl-w1').textContent = w1.toFixed(2);
-  document.getElementById('lbl-w2').textContent = w2.toFixed(2);
-  document.getElementById('lbl-w3').textContent = w3.toFixed(2);
-  document.getElementById('lbl-w4').textContent = w4.toFixed(2);
-
-  let cand = NHATS_DATA.filter(d =>
-    d.dv <= maxDv &&
-    d.dur <= maxDur &&
-    d.occ <= maxOcc &&
-    d.obs >= minObs &&
-    d.diam >= minDiam &&
-    (grpFilter === 'ALL' ||
-     (grpFilter === 'KNOWN' && d.has_spec === 1) ||
-     d.grp.startsWith(grpFilter))
-  );
-
-  document.getElementById('kpi-cand-count').textContent = cand.length.toLocaleString('pt-BR');
-  document.getElementById('kpi-retention').textContent =
-    ((100.0 * cand.length / NHATS_DATA.length).toFixed(2)) + '% dos 7.169 alvos NHATS';
-
-  const tbody = document.getElementById('tbl-sim-body');
-  const titleEl = document.getElementById('sim-scatter-title');
-  if (cand.length === 0) {{
-    document.getElementById('kpi-top1-name').textContent = 'Nenhum candidato';
-    document.getElementById('kpi-top1-meta').textContent = 'Relaxe os filtros selecionados';
-    titleEl.textContent = 'Espaço de Decisão Astrodinâmico — 0 Alvos Qualificados';
-    tbody.innerHTML = '<tr><td colspan="10" class="txt-col">Nenhum asteroide atende simultaneamente às restrições atuais.</td></tr>';
-    Plotly.purge('plot-sim-scatter');
-    currentRanked = [];
-    return;
-  }}
-
-  const maxLogObs = Math.max(...cand.map(d => Math.log1p(d.obs)), 1.0);
-  const maxLogArc = Math.max(...cand.map(d => Math.log1p(d.arc)), 1.0);
-
-  const feats = cand.map(d => {{
-    const infoIdx = 100.0 * (
-      0.35 * (Math.log1p(d.obs) / maxLogObs) +
-      0.25 * (Math.log1p(d.arc) / maxLogArc) +
-      0.25 * ((9.0 - Math.min(9, Math.max(0, d.occ))) / 9.0) +
-      0.10 * d.has_spec +
-      0.05 * d.diam_m_real
-    );
-    const c1 = 1.0 / (d.dv * Math.sqrt(Math.max(d.dur, 1.0)));
-    const c2 = infoIdx;
-    const c3 = Math.log1p(d.diam);
-    const c4 = Math.log1p(d.traj);
-    return {{...d, infoIdx, c1, c2, c3, c4}};
-  }});
-
-  const norm = k => Math.sqrt(feats.reduce((acc, r) => acc + r[k]*r[k], 0)) || 1.0;
-  const n1 = norm('c1'), n2 = norm('c2'), n3 = norm('c3'), n4 = norm('c4');
-  const wSum = (w1 + w2 + w3 + w4) || 1.0;
-  const nw1 = w1/wSum, nw2 = w2/wSum, nw3 = w3/wSum, nw4 = w4/wSum;
-
-  feats.forEach(r => {{
-    r.v1 = (r.c1 / n1) * nw1;
-    r.v2 = (r.c2 / n2) * nw2;
-    r.v3 = (r.c3 / n3) * nw3;
-    r.v4 = (r.c4 / n4) * nw4;
-  }});
-
-  const ib1 = Math.max(...feats.map(r => r.v1)), iw1 = Math.min(...feats.map(r => r.v1));
-  const ib2 = Math.max(...feats.map(r => r.v2)), iw2 = Math.min(...feats.map(r => r.v2));
-  const ib3 = Math.max(...feats.map(r => r.v3)), iw3 = Math.min(...feats.map(r => r.v3));
-  const ib4 = Math.max(...feats.map(r => r.v4)), iw4 = Math.min(...feats.map(r => r.v4));
-
-  feats.forEach(r => {{
-    const db = Math.hypot(r.v1 - ib1, r.v2 - ib2, r.v3 - ib3, r.v4 - ib4);
-    const dw = Math.hypot(r.v1 - iw1, r.v2 - iw2, r.v3 - iw3, r.v4 - iw4);
-    r.topsis = (db + dw) > 0 ? (100.0 * dw / (db + dw)) : 50.0;
-  }});
-
-  feats.sort((a, b) => (b.topsis - a.topsis) || (a.dv - b.dv));
-  currentRanked = feats;
-
-  const top1 = feats[0];
-  document.getElementById('kpi-top1-name').textContent = top1.name;
-  document.getElementById('kpi-top1-meta').textContent =
-    `Δv ${{top1.dv.toFixed(3)}} km/s • TOPSIS ${{top1.topsis.toFixed(1)}} • Espectro: ${{top1.spec}}`;
-
-  const topPlot = feats.slice(0, 300);
-  titleEl.textContent = `Espaço de Decisão Astrodinâmico — Top ${{topPlot.length}} Alvos Qualificados (NASA JPL NHATS)`;
-
-  const trace = {{
-    x: topPlot.map(r => r.dv),
-    y: topPlot.map(r => r.dur),
-    mode: 'markers',
-    type: 'scatter',
-    text: topPlot.map((r, idx) =>
-      `<b>#${{idx+1}} ${{r.name}}</b><br>Espectro: ${{r.spec}}<br>Diâmetro Ref.: ${{r.diam}} m<br>Observações: ${{r.obs}} (OCC ${{r.occ}})<br>TOPSIS: ${{r.topsis.toFixed(2)}}`
-    ),
-    hovertemplate: '%{{text}}<br>Δv: %{{x:.3f}} km/s | Duração: %{{y}} d<extra></extra>',
-    marker: {{
-      size: topPlot.map(r => Math.min(isMobile ? 22 : 30, Math.max(7, Math.log1p(r.diam) * (isMobile ? 3.2 : 4.0)))),
-      color: topPlot.map(r => r.topsis),
-      colorscale: [[0,'#23145B'],[0.35,'#09456C'],[0.7,'#026F6E'],[1,'#1CA39E']],
-      colorbar: {{
-        title: {{text: isMobile ? 'TOPSIS' : 'Score<br>TOPSIS', font: {{size: isMobile ? 10 : 11.5}}}},
-        thickness: isMobile ? 10 : 16,
-        len: isMobile ? 0.80 : 0.90,
-        tickfont: {{size: isMobile ? 9.5 : 11}}
-      }},
-      line: {{color: 'rgba(255,255,255,0.6)', width: 1}}
-    }}
-  }};
-
-  const layout = {{
-    title: {{text: ''}},
-    height: isMobile ? 355 : (isTablet ? 420 : 460),
-    paper_bgcolor: '#1D1226', plot_bgcolor: '#160D18',
-    font: {{color: '#F1F5F9', family: 'Segoe UI, sans-serif', size: isMobile ? 10.5 : (isTablet ? 11.2 : 12)}},
-    margin: {{l: isMobile ? 44 : 55, r: isMobile ? 12 : 24, t: 18, b: 46}},
-    xaxis: {{title: 'Δv Mínimo NASA NHATS (km/s)', gridcolor: '#2A2438', automargin: true}},
-    yaxis: {{title: 'Duração da Missão (Dias)', gridcolor: '#2A2438', automargin: true}}
-  }};
-  Plotly.react('plot-sim-scatter', [trace], layout, {{responsive: true, displaylogo: false}});
-
-  tbody.innerHTML = feats.slice(0, 20).map((r, idx) => `
-    <tr>
-      <td class="txt-col"><strong>#${{idx + 1}}</strong></td>
-      <td class="txt-col">${{r.pdes}}</td>
-      <td class="txt-col">${{r.name}}</td>
-      <td class="txt-col">${{r.spec}}</td>
-      <td class="num-col" style="color:#34D399;font-weight:700;">${{r.dv.toFixed(3)}}</td>
-      <td class="num-col">${{r.dur}}</td>
-      <td class="num-col">${{r.diam.toFixed(1)}}</td>
-      <td class="num-col">${{r.obs.toLocaleString('pt-BR')}}</td>
-      <td class="num-col">${{r.occ}}</td>
-      <td class="num-col" style="color:#1CA39E;font-weight:800;">${{r.topsis.toFixed(2)}}</td>
-    </tr>
-  `).join('');
-}}
-
-function resetDefaults() {{
-  document.getElementById('ctrl-dv').value = 6.5;
-  document.getElementById('ctrl-dur').value = 450;
-  document.getElementById('ctrl-occ').value = 3;
-  document.getElementById('ctrl-obs').value = 50;
-  document.getElementById('ctrl-diam').value = 25;
-  document.getElementById('ctrl-grp').value = 'ALL';
-  document.getElementById('ctrl-w1').value = 0.40;
-  document.getElementById('ctrl-w2').value = 0.25;
-  document.getElementById('ctrl-w3').value = 0.20;
-  document.getElementById('ctrl-w4').value = 0.15;
-  recomputeTOPSIS();
-}}
-
-function exportFilteredCSV() {{
-  if (!currentRanked.length) return;
-  const header = ['rank','spkid','designacao','asteroide_oficial','espectro','delta_v_kms','duracao_dias','diametro_ref_m','observacoes','occ','score_topsis'];
-  const rows = currentRanked.map((r, i) => [
-    i+1, r.spkid, `"${{r.pdes}}"`, `"${{r.name}}"`, `"${{r.spec}}"`,
-    r.dv, r.dur, r.diam, r.obs, r.occ, r.topsis.toFixed(2)
-  ].join(','));
-  const blob = new Blob([[header.join(','), ...rows].join('\\n')], {{type: 'text/csv;charset=utf-8;'}});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'newspace_selecao_topsis_qualificada.csv';
-  a.click();
-}}
-
-window.addEventListener('resize', () => {{
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {{
-    adaptPlotsForViewport();
-    if (document.getElementById('tab-sim').classList.contains('active')) {{
-      recomputeTOPSIS();
-    }}
-  }}, 140);
-}});
-
-window.addEventListener('DOMContentLoaded', () => {{
-  renderStaticPlots();
-  recomputeTOPSIS();
-  adaptPlotsForViewport('tab-sim');
-}});
-</script>
 </body>
 </html>
 """
-    out_path.write_text(html, encoding="utf-8")
 
-    # Sync directly to docs/index.html and docs/favicon.svg when docs/ exists
+    out_path = _write_modular_dashboard_bundle(
+        reports_dir,
+        "newspace_dashboard.html",
+        html,
+        css_content,
+        data_js_content,
+        plotly_bundle_src,
+    )
+
     if DOCS_DIR.exists():
-        (DOCS_DIR / "index.html").write_text(html, encoding="utf-8")
-        (DOCS_DIR / "favicon.svg").write_text(FAVICON_SVG, encoding="utf-8")
+        _write_modular_dashboard_bundle(
+            DOCS_DIR,
+            "index.html",
+            html,
+            css_content,
+            data_js_content,
+            plotly_bundle_src,
+        )
 
     return out_path

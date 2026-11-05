@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import closing
 import json
 import sqlite3
+import subprocess
 
 import nbformat
 import pytest
@@ -165,20 +166,46 @@ def test_executed_notebook_and_dashboard_artifacts():
     assert (DOCS_DIR / "index.html").read_text(encoding="utf-8") == dash_html
     assert (DOCS_DIR / "relatorio.html").read_text(encoding="utf-8") == rep_html
 
+    # Verify modular frontend architecture exists in both reports/ and docs/
+    expected_assets = (
+        "assets/css/dashboard.css",
+        "assets/vendor/plotly.min.js",
+        "assets/data/dashboard-data.js",
+        "assets/js/data-loader.js",
+        "assets/js/topsis-engine.js",
+        "assets/js/table-renderer.js",
+        "assets/js/chart-renderer.js",
+        "assets/js/ui-controller.js",
+    )
+    for rel_asset in expected_assets:
+        rep_asset = REPORTS_DIR / rel_asset
+        doc_asset = DOCS_DIR / rel_asset
+        assert rep_asset.exists() and rep_asset.stat().st_size > 256, f"Missing {rep_asset}"
+        assert doc_asset.exists() and doc_asset.stat().st_size > 256, f"Missing {doc_asset}"
+
+    # Guarantee zero Plotly 7 binary `bdata` buffers leaked into client JSON
+    data_js = (DOCS_DIR / "assets/data/dashboard-data.js").read_text(encoding="utf-8")
+    assert '"bdata"' not in data_js, "Binary bdata buffer found in dashboard-data.js!"
+
+    dash_css = (DOCS_DIR / "assets/css/dashboard.css").read_text(encoding="utf-8")
+    chart_js = (DOCS_DIR / "assets/js/chart-renderer.js").read_text(encoding="utf-8")
+    ui_js = (DOCS_DIR / "assets/js/ui-controller.js").read_text(encoding="utf-8")
+
     # Verify mobile & tablet responsive CSS/JS breakpoints and touch scrolling
+    assert 'name="viewport" content="width=device-width, initial-scale=1.0"' in dash_html
+    assert 'name="viewport" content="width=device-width, initial-scale=1.0"' in rep_html
     for responsive_token in (
-        'name="viewport" content="width=device-width, initial-scale=1.0"',
         "@media (max-width: 960px)",
         "-webkit-overflow-scrolling: touch",
         "min-width: 0;",
     ):
-        assert responsive_token in dash_html
+        assert responsive_token in dash_css
         assert responsive_token in rep_html
 
-    assert "@media (max-width: 1080px)" in dash_html
-    assert "@media (max-width: 640px)" in dash_html
-    assert "adaptPlotsForViewport" in dash_html
-    assert "toggleMobileFilters" in dash_html
+    assert "@media (max-width: 1080px)" in dash_css
+    assert "@media (max-width: 640px)" in dash_css
+    assert "adaptPlotsForViewport" in chart_js
+    assert "toggleMobileFilters" in ui_js
 
     for raw_col in (
         "era_espacial",
@@ -189,3 +216,169 @@ def test_executed_notebook_and_dashboard_artifacts():
     ):
         assert raw_col not in rep_html
         assert raw_col not in dash_html
+
+
+def test_frontend_js_modules_populate_kpis_tables_and_charts():
+    """Execute actual JS modules in Node.js VM to verify KPIs, Top 20 table, filters, and all 10 plots."""
+    node_script = r"""
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+
+const docsDir = process.argv[1];
+const elements = {};
+const plotCalls = {};
+
+function makeEl(id, initialValue = '') {
+  const classes = new Set(id === 'tab-sim' ? ['tab-panel', 'active'] : []);
+  return {
+    id,
+    value: String(initialValue),
+    textContent: '-',
+    innerHTML: '',
+    offsetParent: id === 'app-error-banner' ? null : {},
+    data: null,
+    listeners: {},
+    classList: {
+      add: c => classes.add(c),
+      remove: c => classes.delete(c),
+      toggle: c => { if (classes.has(c)) { classes.delete(c); return false; } classes.add(c); return true; },
+      contains: c => classes.has(c)
+    },
+    setAttribute: () => {},
+    getAttribute: k => (k === 'data-tab' ? 'tab-sim' : null),
+    addEventListener: function(ev, fn) { (this.listeners[ev] = this.listeners[ev] || []).push(fn); },
+    contains: function(other) { return true; }
+  };
+}
+
+[
+  ['app-error-banner', ''], ['kpi-cand-count', ''], ['kpi-retention', ''],
+  ['kpi-top1-name', ''], ['kpi-top1-meta', ''], ['sim-scatter-title', ''],
+  ['tbl-sim-body', ''], ['ctrl-dv', 6.5], ['ctrl-dur', 450], ['ctrl-occ', 3],
+  ['ctrl-obs', 50], ['ctrl-diam', 25], ['ctrl-grp', 'ALL'],
+  ['ctrl-w1', 0.40], ['ctrl-w2', 0.25], ['ctrl-w3', 0.20], ['ctrl-w4', 0.15],
+  ['lbl-dv', ''], ['lbl-dur', ''], ['lbl-occ', ''], ['lbl-obs', ''], ['lbl-diam', ''],
+  ['lbl-w1', ''], ['lbl-w2', ''], ['lbl-w3', ''], ['lbl-w4', ''],
+  ['ctrl-body', ''], ['filter-toggle-icon', ''], ['btn-filter-toggle', ''],
+  ['btn-export-csv', ''], ['btn-reset-defaults', ''], ['tab-sim', ''],
+  ['plot-sim-scatter', ''], ['plot-eng-lat', ''], ['plot-eng-sto', ''],
+  ['plot-ml-clf', ''], ['plot-ml-imp', ''], ['plot-trends', ''],
+  ['plot-obs-law', ''], ['plot-corridors-tr', ''], ['plot-corridors-act', ''],
+  ['plot-actuarial-mat', '']
+].forEach(([id, val]) => { elements[id] = makeEl(id, val); });
+
+const sandbox = {
+  console,
+  Math, Number, String, Object, Array, ArrayBuffer, JSON, Infinity,
+  parseFloat, parseInt, isFinite, setTimeout, clearTimeout,
+  innerWidth: 1280,
+  addEventListener: () => {},
+  requestAnimationFrame: fn => fn(),
+  document: {
+    readyState: 'complete',
+    documentElement: { clientWidth: 1280 },
+    getElementById: id => elements[id] || null,
+    querySelectorAll: () => [],
+    contains: () => true,
+    addEventListener: () => {}
+  },
+  Plotly: {
+    newPlot: (idOrEl, data, layout) => {
+      const id = typeof idOrEl === 'string' ? idOrEl : idOrEl.id;
+      if (!Array.isArray(data) || data.length === 0) throw new Error('Empty data for ' + id);
+      if (!Array.isArray(data[0].x) || data[0].x.length === 0) throw new Error('Non-array x for ' + id);
+      elements[id].data = data;
+      plotCalls[id] = { traces: data.length, xLen: data[0].x.length };
+    },
+    react: (idOrEl, data, layout) => {
+      const id = typeof idOrEl === 'string' ? idOrEl : idOrEl.id;
+      if (!Array.isArray(data) || !Array.isArray(data[0].x) || data[0].x.length === 0) {
+        throw new Error('Invalid scatter data for ' + id);
+      }
+      elements[id].data = data;
+      plotCalls[id] = { traces: data.length, xLen: data[0].x.length };
+    },
+    relayout: () => {},
+    purge: (idOrEl) => {
+      const id = typeof idOrEl === 'string' ? idOrEl : idOrEl.id;
+      if (elements[id]) elements[id].data = null;
+    },
+    Plots: { resize: () => {} }
+  }
+};
+sandbox.window = sandbox;
+sandbox.globalThis = sandbox;
+vm.createContext(sandbox);
+
+[
+  'assets/data/dashboard-data.js',
+  'assets/js/data-loader.js',
+  'assets/js/topsis-engine.js',
+  'assets/js/table-renderer.js',
+  'assets/js/chart-renderer.js',
+  'assets/js/ui-controller.js'
+].forEach(rel => {
+  const code = fs.readFileSync(path.join(docsDir, rel), 'utf8');
+  vm.runInContext(code, sandbox, { filename: rel });
+});
+
+// 1. Verify zero initialization errors & all 10 plots rendered
+if (elements['app-error-banner'].classList.contains('visible')) {
+  throw new Error('Error banner visible: ' + elements['app-error-banner'].innerHTML);
+}
+const expectedPlots = [
+  'plot-sim-scatter', 'plot-eng-lat', 'plot-eng-sto', 'plot-ml-clf', 'plot-ml-imp',
+  'plot-trends', 'plot-obs-law', 'plot-corridors-tr', 'plot-corridors-act', 'plot-actuarial-mat'
+];
+expectedPlots.forEach(pid => {
+  if (!plotCalls[pid] || plotCalls[pid].xLen === 0) {
+    throw new Error('Plot was not rendered with real array data: ' + pid);
+  }
+});
+
+// 2. Verify KPIs and Top-20 table populated with real defaults
+const defaultCountText = elements['kpi-cand-count'].textContent;
+const defaultTop1 = elements['kpi-top1-name'].textContent;
+const rowCount = (elements['tbl-sim-body'].innerHTML.match(/<tr>/g) || []).length;
+if (defaultCountText === '-' || !defaultTop1.includes('Apophis') || rowCount !== 20) {
+  throw new Error(`Unexpected default state: count=${defaultCountText}, top1=${defaultTop1}, rows=${rowCount}`);
+}
+
+// 3. Verify changing filter & weights dynamically updates KPIs, table, and scatter plot
+elements['ctrl-dv'].value = '5.0';
+elements['ctrl-w1'].value = '0.85';
+sandbox.NewSpaceUIController.recomputeSimulation();
+const strictCountText = elements['kpi-cand-count'].textContent;
+if (strictCountText === defaultCountText || strictCountText === '-') {
+  throw new Error('Changing Δv filter did not update candidate count!');
+}
+
+// 4. Verify resetDefaults restores exact initial state
+sandbox.NewSpaceUIController.resetDefaults();
+if (elements['kpi-cand-count'].textContent !== defaultCountText) {
+  throw new Error('resetDefaults failed to restore default candidate count!');
+}
+
+console.log(JSON.stringify({
+  ok: true,
+  defaultCount: defaultCountText,
+  defaultTop1,
+  rowCount,
+  strictCount: strictCountText,
+  renderedPlots: Object.keys(plotCalls).length
+}));
+"""
+    res = subprocess.run(
+        ["node", "-e", node_script, str(DOCS_DIR)],
+        capture_output=True,
+        text=True,
+        check=False,
+        encoding="utf-8",
+    )
+    assert res.returncode == 0, f"Frontend JS runtime test failed:\nSTDOUT: {res.stdout}\nSTDERR: {res.stderr}"
+    summary = json.loads(res.stdout.strip())
+    assert summary["ok"] is True
+    assert summary["renderedPlots"] == 10
+    assert summary["rowCount"] == 20
+    assert "Apophis" in summary["defaultTop1"]
