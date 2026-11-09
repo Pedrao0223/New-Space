@@ -72,7 +72,7 @@ Esta aplicação evolui a modelagem relacional concebida na etapa anterior sobre
 3. **USSPACECOM / CelesTrak — Catálogo Oficial `NORAD SATCAT`**: **71.262 objetos espaciais rastreados** desde o Sputnik 1 (`1957–2026`), permitindo classificar fisicamente os corredores orbitais (`LEO`, `MEO`, `GEO`, `HEO/Cislunar`, `Espaço Profundo`) e medir a fração real de satélites ativos vs. detritos espaciais.
 4. **Harvard-Smithsonian Center for Astrophysics — `GCAT Launch Log` (J. McDowell)**: Registro histórico completo de **7.418 lançamentos orbitais e interplanetários distintos** distribuídos em **441 modelos de foguetes**, sustentando a modelagem atuarial de confiabilidade (Limite Inferior de Wilson 95% e Bayes Empírico).
 
-**Identidade Visual Oficial do Projeto:** `#160D18` • `#23145B` • `#09456C` • `#026F6E` • `#1CA39E`"""
+**Identidade Visual Deep-Space:** `#05070D` • `#1E1B4B` • `#6366F1` • `#8B5CF6` • `#38BDF8`"""
         ),
         new_code_cell(
             """from pathlib import Path
@@ -118,11 +118,11 @@ pd.set_option("display.width", 140)
 display(HTML(f'''
 <div style="display:flex;gap:10px;align-items:center;background:{PALETTE.cosmic_bg};padding:12px 18px;border-radius:8px;border:1px solid {PALETTE.vibrant_cyan};color:#fff;font-family:Segoe UI,sans-serif;">
   <b>Ambiente Inicializado com Sucesso</b> | Raiz: <code>{ROOT_DIR.name}</code> | Paleta Ativa:
-  <span style="background:#160D18;padding:3px 10px;border:1px solid #fff;border-radius:4px;">#160D18</span>
-  <span style="background:#23145B;padding:3px 10px;border-radius:4px;">#23145B</span>
-  <span style="background:#09456C;padding:3px 10px;border-radius:4px;">#09456C</span>
-  <span style="background:#026F6E;padding:3px 10px;border-radius:4px;">#026F6E</span>
-  <span style="background:#1CA39E;color:#000;font-weight:700;padding:3px 10px;border-radius:4px;">#1CA39E</span>
+  <span style="background:#05070D;padding:3px 10px;border:1px solid #fff;border-radius:4px;">#05070D</span>
+  <span style="background:#1E1B4B;padding:3px 10px;border-radius:4px;">#1E1B4B</span>
+  <span style="background:#6366F1;padding:3px 10px;border-radius:4px;">#6366F1</span>
+  <span style="background:#8B5CF6;padding:3px 10px;border-radius:4px;">#8B5CF6</span>
+  <span style="background:#38BDF8;color:#000;font-weight:700;padding:3px 10px;border-radius:4px;">#38BDF8</span>
 </div>
 '''))"""
         ),

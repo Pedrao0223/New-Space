@@ -45,6 +45,9 @@ from newspace.web_assets import (
 )
 
 
+FONT_STACK = "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+
+
 SHORT_STORAGE_LABELS = {
     "Apache Parquet Colunar (Compressão ZSTD/Snappy)": "Parquet Colunar (ZSTD)",
     "SQLite Relacional Normalizado (Sem Índices)": "SQLite (Sem Índices)",
@@ -89,7 +92,7 @@ def _apply_cosmic_layout(
     height: int = 460,
     top_legend: bool = True,
 ) -> go.Figure:
-    """Apply balanced margins, auto-margin axes, and official dark cosmic palette."""
+    """Apply balanced margins, auto-margin axes, and the minimalist deep-space palette."""
     legend_cfg = (
         dict(
             orientation="h",
@@ -97,41 +100,51 @@ def _apply_cosmic_layout(
             y=1.03,
             xanchor="right",
             x=1.0,
-            bgcolor="rgba(35, 20, 91, 0.60)",
-            bordercolor="rgba(28, 163, 158, 0.35)",
-            borderwidth=1,
-            font=dict(size=11.5),
+            bgcolor="rgba(0, 0, 0, 0)",
+            borderwidth=0,
+            font=dict(size=11.5, color=PALETTE.text_muted),
         )
         if top_legend
         else dict(
-            bgcolor="rgba(35, 20, 91, 0.60)",
-            bordercolor="rgba(28, 163, 158, 0.35)",
-            borderwidth=1,
-            font=dict(size=11.5),
+            bgcolor="rgba(0, 0, 0, 0)",
+            borderwidth=0,
+            font=dict(size=11.5, color=PALETTE.text_muted),
         )
     )
 
     fig.update_layout(
         title=dict(
             text=f"<b>{title}</b>",
-            font=dict(size=15.5, color=PALETTE.text_primary, family="Segoe UI, sans-serif"),
+            font=dict(size=15, color=PALETTE.text_primary, family=FONT_STACK),
             x=0.01,
             y=0.96,
         ),
         paper_bgcolor=PALETTE.cosmic_bg,
-        plot_bgcolor="#1D1226",
-        font=dict(color=PALETTE.text_primary, family="Segoe UI, sans-serif", size=12),
+        plot_bgcolor=PALETTE.cosmic_bg,
+        font=dict(color=PALETTE.text_primary, family=FONT_STACK, size=12),
         height=height,
         margin=dict(l=24, r=28, t=76, b=44),
         legend=legend_cfg,
         hoverlabel=dict(
-            bgcolor=PALETTE.space_violet,
-            bordercolor=PALETTE.vibrant_cyan,
-            font=dict(color="#FFFFFF", size=12),
+            bgcolor="#0B0F1C",
+            bordercolor="rgba(148, 163, 184, 0.25)",
+            font=dict(color=PALETTE.text_primary, size=12, family=FONT_STACK),
         ),
     )
-    fig.update_xaxes(gridcolor=PALETTE.grid_line, zerolinecolor=PALETTE.grid_line, automargin=True)
-    fig.update_yaxes(gridcolor=PALETTE.grid_line, zerolinecolor=PALETTE.grid_line, automargin=True)
+    fig.update_xaxes(
+        gridcolor=PALETTE.grid_line,
+        zerolinecolor=PALETTE.grid_line,
+        linecolor=PALETTE.grid_line,
+        tickfont=dict(color=PALETTE.text_muted),
+        automargin=True,
+    )
+    fig.update_yaxes(
+        gridcolor=PALETTE.grid_line,
+        zerolinecolor=PALETTE.grid_line,
+        linecolor=PALETTE.grid_line,
+        tickfont=dict(color=PALETTE.text_muted),
+        automargin=True,
+    )
     return fig
 
 
@@ -153,7 +166,7 @@ def fig_engine_latency_card(bench: BenchmarkSuiteResults) -> go.Figure:
             y=eng["engine"],
             x=eng["latencia_total_mediana_ms"],
             orientation="h",
-            marker=dict(color=bar_colors, line=dict(color="rgba(255,255,255,0.5)", width=0.8)),
+            marker=dict(color=bar_colors, line=dict(width=0)),
             text=[
                 f"  {ms:.1f} ms ({sp:.1f}x)"
                 for ms, sp in zip(
@@ -189,7 +202,7 @@ def fig_storage_footprint_card(bench: BenchmarkSuiteResults) -> go.Figure:
             y=st["short_label"],
             x=st["tamanho_mb"],
             orientation="h",
-            marker=dict(color=colors, line=dict(color="rgba(255,255,255,0.5)", width=0.8)),
+            marker=dict(color=colors, line=dict(width=0)),
             text=[
                 f"  {mb:.2f} MB ({cr:.2f}x)"
                 for mb, cr in zip(st["tamanho_mb"], st["razao_compressao_vs_bruto"])
@@ -225,7 +238,7 @@ def fig_engine_benchmark(bench: BenchmarkSuiteResults) -> go.Figure:
             y=eng["engine"],
             x=eng["latencia_total_mediana_ms"],
             orientation="h",
-            marker=dict(color=PALETTE.vibrant_cyan, line=dict(color="rgba(255,255,255,0.5)", width=0.7)),
+            marker=dict(color=PALETTE.vibrant_cyan, line=dict(width=0)),
             text=[
                 f"  {ms:.1f} ms ({sp:.1f}x)"
                 for ms, sp in zip(eng["latencia_total_mediana_ms"], eng["speedup_vs_sqlite_sem_indice"])
@@ -245,7 +258,7 @@ def fig_engine_benchmark(bench: BenchmarkSuiteResults) -> go.Figure:
             y=st["short_label"],
             x=st["tamanho_mb"],
             orientation="h",
-            marker=dict(color=PALETTE.deep_teal, line=dict(color="rgba(255,255,255,0.5)", width=0.7)),
+            marker=dict(color=PALETTE.deep_teal, line=dict(width=0)),
             text=[
                 f"  {mb:.2f} MB ({cr:.2f}x)"
                 for mb, cr in zip(st["tamanho_mb"], st["razao_compressao_vs_bruto"])
@@ -314,7 +327,7 @@ def fig_risk_factors_card(bench: BenchmarkSuiteResults) -> go.Figure:
             y=imp["short_factor"],
             x=imp["importancia_relativa_pct"],
             orientation="h",
-            marker=dict(color=PALETTE.deep_teal, line=dict(color="rgba(255,255,255,0.45)", width=0.7)),
+            marker=dict(color=PALETTE.deep_teal, line=dict(width=0)),
             text=[f"  {v:.1f}%" for v in imp["importancia_relativa_pct"]],
             textposition="outside",
             cliponaxis=False,
@@ -426,7 +439,7 @@ def fig_information_trends(trends: TrendAnalysisSummary) -> go.Figure:
             name="Satélites / Cargas Úteis (PAY)",
             line=dict(color=PALETTE.vibrant_cyan, width=2.5),
             fill="tozeroy",
-            fillcolor="rgba(28, 163, 158, 0.20)",
+            fillcolor="rgba(56, 189, 248, 0.14)",
         ),
         row=1,
         col=1,
@@ -471,7 +484,7 @@ def fig_information_trends(trends: TrendAnalysisSummary) -> go.Figure:
             x=list(fc["ano"]) + list(fc["ano"])[::-1],
             y=list(fc["ic95_superior"]) + list(fc["ic95_inferior"])[::-1],
             fill="toself",
-            fillcolor="rgba(28, 163, 158, 0.22)",
+            fillcolor="rgba(56, 189, 248, 0.14)",
             line=dict(color="rgba(255,255,255,0)"),
             name="IC 95% (2026–2030)",
             hoverinfo="skip",
@@ -505,7 +518,7 @@ def fig_information_trends(trends: TrendAnalysisSummary) -> go.Figure:
         ax=-90,
         ay=-15,
         font=dict(color="#E9D5FF", size=11),
-        bgcolor="rgba(35, 20, 91, 0.88)",
+        bgcolor="rgba(11, 15, 28, 0.92)",
         bordercolor="#A78BFA",
         row=1,
         col=1,
@@ -677,7 +690,7 @@ def fig_topsis_prospecting_map(selection: SelectionDecisionOutput) -> go.Figure:
                     [1.0, PALETTE.vibrant_cyan],
                 ],
                 colorbar=dict(title="Score<br>TOPSIS"),
-                line=dict(width=1.0, color="rgba(255,255,255,0.65)"),
+                line=dict(width=0.6, color="rgba(226,232,240,0.35)"),
                 opacity=0.88,
             ),
             customdata=np.column_stack(
@@ -1076,6 +1089,7 @@ def export_standalone_custom_dashboard(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="{PALETTE.cosmic_bg}">
 <title>NewSpace Analytics Cockpit — Benchmarking, Tendências &amp; Decisão Multicritério</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="alternate icon" href="{FAVICON_DATA_URI}">
@@ -1089,32 +1103,34 @@ def export_standalone_custom_dashboard(
 <script defer src="assets/js/ui-controller.js?v={asset_ver}"></script>
 </head>
 <body>
-<header>
-  <div class="brand-wrap">
-    <div class="brand-logo">{FAVICON_SVG}</div>
-    <div class="brand-text">
-      <div class="brand-title">NEWSPACE ANALYTICS COCKPIT &bull; MINERAÇÃO &amp; RISCO ATUARIAL</div>
-      <div class="brand-sub">Dados 100% Reais Auditados (NASA JPL SBDB &amp; NHATS &bull; USSPACECOM NORAD SATCAT &bull; Harvard-Smithsonian GCAT)</div>
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="palette-pills">
-      <span>Paleta:</span>
-      <span class="swatch" style="background:#160D18" title="#160D18"></span>
-      <span class="swatch" style="background:#23145B" title="#23145B"></span>
-      <span class="swatch" style="background:#09456C" title="#09456C"></span>
-      <span class="swatch" style="background:#026F6E" title="#026F6E"></span>
-      <span class="swatch" style="background:#1CA39E" title="#1CA39E"></span>
-    </div>
-    <a class="report-btn" href="relatorio.html">Relatório Técnico Executivo &rarr;</a>
+<div class="space-backdrop" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="./" aria-label="NewSpace Analytics — início">
+      <span class="brand-logo">{FAVICON_SVG}</span>
+      <span class="brand-text">
+        <span class="brand-title">NewSpace Analytics</span>
+        <span class="brand-sub">Mineração, tendências &amp; risco atuarial</span>
+      </span>
+    </a>
+    <a class="report-btn" href="relatorio.html">Relatório técnico <span aria-hidden="true">&rarr;</span></a>
   </div>
 </header>
 
-<nav class="tabs">
-  <button type="button" class="tab-btn active" data-tab="tab-sim">1. Simulador Customizável TOPSIS (Prospecção)</button>
-  <button type="button" class="tab-btn" data-tab="tab-trends">2. Tendência de Produção de Informações (1957–2030)</button>
-  <button type="button" class="tab-btn" data-tab="tab-bench">3. Benchmarking da Mineração &amp; Motores</button>
-  <button type="button" class="tab-btn" data-tab="tab-actuarial">4. Corredores Orbitais &amp; Matriz Atuarial</button>
+<section class="hero">
+  <span class="eyebrow">Dados 100% reais e auditados</span>
+  <h1 class="hero-title">Cockpit de decisão para operações NewSpace</h1>
+  <p class="hero-sub">NASA JPL SBDB &amp; NHATS &middot; USSPACECOM NORAD SATCAT &middot; Harvard-Smithsonian GCAT</p>
+</section>
+
+<nav class="tabs" aria-label="Seções do painel">
+  <div class="tabs-inner">
+    <button type="button" class="tab-btn active" data-tab="tab-sim" title="Simulador Customizável TOPSIS (Prospecção)">Simulador TOPSIS</button>
+    <button type="button" class="tab-btn" data-tab="tab-trends" title="Tendência de Produção de Informações (1957–2030)">Tendências 1957–2030</button>
+    <button type="button" class="tab-btn" data-tab="tab-bench" title="Benchmarking da Mineração &amp; Motores">Benchmarking</button>
+    <button type="button" class="tab-btn" data-tab="tab-actuarial" title="Corredores Orbitais &amp; Matriz Atuarial">Corredores &amp; Atuarial</button>
+  </div>
 </nav>
 
 <main>
@@ -1123,14 +1139,17 @@ def export_standalone_custom_dashboard(
   <!-- TAB 1: CUSTOMIZABLE INTERACTIVE SIMULATOR -->
   <section id="tab-sim" class="tab-panel active">
     <div class="kpi-row">
-      <div class="kpi"><div class="lbl">Registros Reais Auditados</div><div class="val">{total_records:,}</div><div class="hint">Zero dados fictícios (SHA-256)</div></div>
-      <div class="kpi"><div class="lbl">Candidatos Qualificados (Filtro Atual)</div><div class="val" id="kpi-cand-count">-</div><div class="hint" id="kpi-retention">-</div></div>
-      <div class="kpi"><div class="lbl">Alvo #1 Recomendado (TOPSIS)</div><div class="val val-compact" id="kpi-top1-name">-</div><div class="hint" id="kpi-top1-meta">-</div></div>
-      <div class="kpi"><div class="lbl">CAGR Produção de Informação</div><div class="val">{fc_2030['cagr_newspace_2015_2025_pct']:.1f}% a.a.</div><div class="hint">Era NewSpace (2015–2025)</div></div>
+      <div class="kpi"><div class="lbl">Registros reais auditados</div><div class="val">{total_records:,}</div><div class="hint">Zero dados fictícios (SHA-256)</div></div>
+      <div class="kpi kpi-accent"><div class="lbl">Candidatos qualificados</div><div class="val" id="kpi-cand-count">-</div><div class="hint" id="kpi-retention">-</div></div>
+      <div class="kpi"><div class="lbl">Alvo #1 recomendado (TOPSIS)</div><div class="val val-compact" id="kpi-top1-name">-</div><div class="hint" id="kpi-top1-meta">-</div></div>
+      <div class="kpi"><div class="lbl">CAGR produção de informação</div><div class="val">{fc_2030['cagr_newspace_2015_2025_pct']:.1f}% <small>a.a.</small></div><div class="hint">Era NewSpace (2015–2025)</div></div>
     </div>
 
-    <div class="criteria-intro-card">
-      <h2 class="criteria-intro-title">O que são os Critérios de Seleção de Dados e sua Importância na Pesquisa Espacial</h2>
+    <details class="criteria-intro-card">
+      <summary>
+        <h2 class="criteria-intro-title">O que são os Critérios de Seleção de Dados e sua Importância na Pesquisa Espacial</h2>
+        <span class="summary-toggle" aria-hidden="true"></span>
+      </summary>
       <p class="criteria-intro-lead">
         Na ciência de dados aeroespacial, os <strong>critérios de seleção de dados</strong> são filtros físicos, astrométricos e estatísticos aplicados sobre grandes catálogos brutos ({len(datasets.asteroids):,} asteroides próximos à Terra na base <em>NASA JPL SBDB</em> e {len(client_records):,} alvos com soluções balísticas completas no <em>NASA NHATS</em>) para isolar apenas objetos operacionalmente alcançáveis e com efemérides confiáveis. Como a produção de informações espaciais cresce exponencialmente mas apresenta forte assimetria observacional, essa triagem prévia impede que algoritmos de decisão (<em>MCDA-TOPSIS</em>) ranqueiem alvos energeticamente inviáveis ou com alto risco de perda navegacional.
       </p>
@@ -1148,46 +1167,46 @@ def export_standalone_custom_dashboard(
           Qualifica corpos com escala útil (&ge; 25 m) para sondas precursoras de reconhecimento espectral ou extração de recursos (água/voláteis no Complexo-C e metais em S/X), apoiando a subscrição securitária da missão.
         </div>
       </div>
-    </div>
+    </details>
 
     <div class="sim-layout">
       <aside class="control-box">
         <button type="button" class="mobile-filter-toggle" id="btn-filter-toggle" aria-expanded="true">
-          <span>Ajustar Critérios &amp; Pesos TOPSIS</span>
+          <span>Critérios &amp; pesos TOPSIS</span>
           <span id="filter-toggle-icon">&#9652; Ocultar</span>
         </button>
         <div class="ctrl-body" id="ctrl-body">
           <div class="ctrl-columns">
             <div class="ctrl-col">
               <h3>Critérios de Seleção de Dados</h3>
-              <p class="ctrl-section-note">Restrições eliminatórias físicas, astrométricas e taxonômicas aplicadas sobre os alvos reais da NASA JPL:</p>
+              <p class="ctrl-section-note">Restrições eliminatórias físicas, astrométricas e taxonômicas aplicadas sobre os alvos reais da NASA JPL.</p>
               <div class="ctrl-group">
-                <label for="ctrl-dv"><span>&Delta;v Máximo de Missão (km/s)</span><strong id="lbl-dv">6.50</strong></label>
+                <label for="ctrl-dv"><span>&Delta;v máximo de missão (km/s)</span><strong id="lbl-dv">6.50</strong></label>
                 <input type="range" id="ctrl-dv" min="4.0" max="11.0" step="0.25" value="6.5">
                 <span class="ctrl-hint">Orçamento propulsivo mínimo ida e volta NHATS (padrão: &le; 6,50 km/s).</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-dur"><span>Duração Máxima de Voo (dias)</span><strong id="lbl-dur">450</strong></label>
+                <label for="ctrl-dur"><span>Duração máxima de voo (dias)</span><strong id="lbl-dur">450</strong></label>
                 <input type="range" id="ctrl-dur" min="120" max="450" step="30" value="450">
                 <span class="ctrl-hint">Janela operacional total da trajetória de menor &Delta;v (padrão: &le; 450 d).</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-occ"><span>Incerteza Orbital Máxima (OCC &le;)</span><strong id="lbl-occ">3</strong></label>
+                <label for="ctrl-occ"><span>Incerteza orbital máxima (OCC &le;)</span><strong id="lbl-occ">3</strong></label>
                 <input type="range" id="ctrl-occ" min="0" max="9" step="1" value="3">
                 <span class="ctrl-hint">Escala NASA de incerteza efeméride: 0 = órbita precisa a 9 = incerta (padrão: &le; 3).</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-obs"><span>Observações Astrométricas Mínimas</span><strong id="lbl-obs">50</strong></label>
+                <label for="ctrl-obs"><span>Observações astrométricas mínimas</span><strong id="lbl-obs">50</strong></label>
                 <input type="range" id="ctrl-obs" min="5" max="500" step="5" value="50">
                 <span class="ctrl-hint">Volume mínimo de medições ópticas/radar no SBDB para rastreio seguro (padrão: &ge; 50).</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-diam"><span>Diâmetro Físico Mínimo (m)</span><strong id="lbl-diam">25</strong></label>
+                <label for="ctrl-diam"><span>Diâmetro físico mínimo (m)</span><strong id="lbl-diam">25</strong></label>
                 <input type="range" id="ctrl-diam" min="5" max="400" step="5" value="25">
                 <span class="ctrl-hint">Porte mínimo estimado/medido para operação robótica ou lavra (padrão: &ge; 25 m).</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-grp"><span>Filtro Taxonômico / Mineralógico</span></label>
+                <label for="ctrl-grp"><span>Filtro taxonômico / mineralógico</span></label>
                 <select id="ctrl-grp">
                   <option value="ALL">Todos os Grupos (Incluindo Alvos p/ Sonda Precursora)</option>
                   <option value="KNOWN">Apenas Espectrografados Confirmados pela NASA</option>
@@ -1201,38 +1220,38 @@ def export_standalone_custom_dashboard(
 
             <div class="ctrl-col">
               <h3>Pesos Decisórios MCDA-TOPSIS</h3>
-              <p class="ctrl-section-note">Importância relativa na ordenação dos alvos qualificados (normalização automática para soma = 100%):</p>
+              <p class="ctrl-section-note">Importância relativa na ordenação dos alvos qualificados (normalização automática para soma = 100%).</p>
               <div class="ctrl-group">
-                <label for="ctrl-w1"><span>Peso Eficiência Astrodinâmica (&Delta;v)</span><strong id="lbl-w1">0.40</strong></label>
+                <label for="ctrl-w1"><span>Eficiência astrodinâmica (&Delta;v)</span><strong id="lbl-w1">0.40</strong></label>
                 <input type="range" id="ctrl-w1" min="0.05" max="1.0" step="0.05" value="0.40">
                 <span class="ctrl-hint">Prioriza menor energia propulsiva combinada à menor duração de missão.</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-w2"><span>Peso Maturidade da Informação</span><strong id="lbl-w2">0.25</strong></label>
+                <label for="ctrl-w2"><span>Maturidade da informação</span><strong id="lbl-w2">0.25</strong></label>
                 <input type="range" id="ctrl-w2" min="0.05" max="1.0" step="0.05" value="0.25">
                 <span class="ctrl-hint">Valoriza arco observacional longo, baixo OCC, espectroscopia e diâmetro medido.</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-w3"><span>Peso Porte Físico Mineral</span><strong id="lbl-w3">0.20</strong></label>
+                <label for="ctrl-w3"><span>Porte físico mineral</span><strong id="lbl-w3">0.20</strong></label>
                 <input type="range" id="ctrl-w3" min="0.05" max="1.0" step="0.05" value="0.20">
                 <span class="ctrl-hint">Valoriza maior volume potencial de recursos minerais/voláteis (escala logarítmica).</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-w4"><span>Peso Redundância de Janelas</span><strong id="lbl-w4">0.15</strong></label>
+                <label for="ctrl-w4"><span>Redundância de janelas</span><strong id="lbl-w4">0.15</strong></label>
                 <input type="range" id="ctrl-w4" min="0.05" max="1.0" step="0.05" value="0.15">
                 <span class="ctrl-hint">Valoriza quantidade de soluções balísticas alternativas para flexibilidade de lançamento.</span>
               </div>
 
               <div class="ctrl-actions">
-                <button type="button" class="action-btn" id="btn-export-csv">Exportar Seleção Qualificada (CSV)</button>
-                <button type="button" class="action-btn secondary" id="btn-reset-defaults">Restaurar Critérios Padrão da Equipe</button>
+                <button type="button" class="action-btn" id="btn-export-csv">Exportar seleção (CSV)</button>
+                <button type="button" class="action-btn secondary" id="btn-reset-defaults">Restaurar critérios padrão</button>
               </div>
             </div>
           </div>
         </div>
       </aside>
 
-      <div>
+      <div class="sim-results">
         <div class="chart-card">
           <div class="section-subtitle" id="sim-scatter-title">Espaço de Decisão Astrodinâmico — Alvos Qualificados (NASA JPL NHATS)</div>
           <div id="plot-sim-scatter" class="plot-box"></div>
@@ -1289,9 +1308,9 @@ def export_standalone_custom_dashboard(
   <!-- TAB 3: DATA MINING BENCHMARK -->
   <section id="tab-bench" class="tab-panel">
     <div class="kpi-row kpi-3">
-      <div class="kpi"><div class="lbl">Motor Analítico Mais Rápido</div><div class="val val-compact">{best_eng['engine']}</div><div class="hint">Latência total: {best_eng['latencia_total_mediana_ms']:.2f} ms ({best_eng['speedup_vs_sqlite_sem_indice']:.1f}x speedup)</div></div>
-      <div class="kpi"><div class="lbl">Melhor Clusterização NHATS</div><div class="val val-compact">{bench.clustering_benchmark.iloc[0]['algoritmo']}</div><div class="hint">Silhouette: {bench.clustering_benchmark.iloc[0]['silhouette_score']:.4f}</div></div>
-      <div class="kpi"><div class="lbl">Melhor Classificador Atuarial</div><div class="val val-compact">{SHORT_MODEL_LABELS.get(bench.classification_benchmark.iloc[0]['modelo_atuarial'], bench.classification_benchmark.iloc[0]['modelo_atuarial'])}</div><div class="hint">ROC-AUC: {bench.classification_benchmark.iloc[0]['roc_auc']:.4f} | Brier: {bench.classification_benchmark.iloc[0]['brier_score_calibracao']:.5f}</div></div>
+      <div class="kpi kpi-accent"><div class="lbl">Motor analítico mais rápido</div><div class="val val-compact">{best_eng['engine']}</div><div class="hint">Latência total: {best_eng['latencia_total_mediana_ms']:.2f} ms ({best_eng['speedup_vs_sqlite_sem_indice']:.1f}x speedup)</div></div>
+      <div class="kpi"><div class="lbl">Melhor clusterização NHATS</div><div class="val val-compact">{bench.clustering_benchmark.iloc[0]['algoritmo']}</div><div class="hint">Silhouette: {bench.clustering_benchmark.iloc[0]['silhouette_score']:.4f}</div></div>
+      <div class="kpi"><div class="lbl">Melhor classificador atuarial</div><div class="val val-compact">{SHORT_MODEL_LABELS.get(bench.classification_benchmark.iloc[0]['modelo_atuarial'], bench.classification_benchmark.iloc[0]['modelo_atuarial'])}</div><div class="hint">ROC-AUC: {bench.classification_benchmark.iloc[0]['roc_auc']:.4f} | Brier: {bench.classification_benchmark.iloc[0]['brier_score_calibracao']:.5f}</div></div>
     </div>
     <div class="grid-2">
       <div class="chart-card">
@@ -1333,6 +1352,11 @@ def export_standalone_custom_dashboard(
     </div>
   </section>
 </main>
+
+<footer class="site-footer">
+  <span>NewSpace Analytics &middot; {total_records:,} registros reais auditados</span>
+  <a href="relatorio.html">Relatório técnico executivo</a>
+</footer>
 </body>
 </html>
 """

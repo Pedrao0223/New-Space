@@ -1,6 +1,6 @@
 # Relatório Técnico Executivo para Tomada de Decisão — Operações NewSpace
 
-**Data de Geração:** 05/11/2026 15:50  
+**Data de Geração:** 09/11/2026 16:57  
 **Escopo do Negócio:** Prospecção Mineral de Asteroides Próximos à Terra (NEAs), Gestão de Risco em Corredores Orbitais e Subscrição Atuarial Aeroespacial  
 **Política de Integridade Científica:** 100% Dados Públicos Reais Auditados via SHA-256 (122,200 registros empíricos processados — zero registros sintéticos ou fictícios)
 
@@ -27,37 +27,37 @@ A evolução do modelo relacional da Fase 1 foi avaliada frente a motores analí
 
 | Motor Analítico / Persistência   |   Latência Total (ms) |   Média / Carga (ms) |   P95 (ms) |   Memória Pico (KB) |   Vazão (mil reg/s) | Speedup   |
 |:---------------------------------|----------------------:|---------------------:|-----------:|--------------------:|--------------------:|:----------|
-| Polars (Lazy Parquet)            |                 10.53 |                 3.52 |       3.69 |                 5   |             11630.4 | 4.08x     |
-| SQLite (Indexado + WAL)          |                 17.39 |                 5.83 |       5.95 |                20.7 |             27602.4 | 2.47x     |
-| DuckDB (OLAP Parquet)            |                 18.11 |                 6.1  |       6.34 |               218.8 |              6334.1 | 2.37x     |
-| Pandas (In-Memory)               |                 35.04 |                11.68 |      12.13 |              4260.8 |              3571.5 | 1.23x     |
-| SQLite (Sem Índices)             |                 42.93 |                14.33 |      14.58 |                20.7 |              2799.7 | 1.00x     |
+| Polars (Lazy Parquet)            |                 10.06 |                 3.34 |       3.62 |                 5   |             11860.2 | 4.13x     |
+| SQLite (Indexado + WAL)          |                 17.36 |                 5.83 |       5.98 |                20.7 |             27183.3 | 2.39x     |
+| DuckDB (OLAP Parquet)            |                 17.71 |                 5.93 |       6.18 |               218.8 |              6440.4 | 2.35x     |
+| Pandas (In-Memory)               |                 34.24 |                11.49 |      11.84 |              4260.8 |              3618.2 | 1.21x     |
+| SQLite (Sem Índices)             |                 41.53 |                14.06 |      14.64 |                20.7 |              2911.2 | 1.00x     |
 
 **Conclusões de Engenharia de Dados:**
-- **Motor Analítico Vencedor:** **Polars (Lazy Parquet)** atingiu latência total mediana de **10.53 ms** (**4.08x mais rápido** que o SQLite relacional sem índices).
-- **Validação da Indexação Relacional:** A adição de índices compostos cobertos B-Tree, estatísticas `ANALYZE` e modo `WAL` no SQLite acelerou as consultas relacionais em **2.47x** (42.93 ms $\rightarrow$ 17.39 ms), validando o SQLite indexado para persistência transacional (ACID + chaves estrangeiras) em conjunto com **Apache Parquet (4.30 MB vs 20.95 MB brutos — compressão de 4.87x)** para analytics em tempo real.
+- **Motor Analítico Vencedor:** **Polars (Lazy Parquet)** atingiu latência total mediana de **10.06 ms** (**4.13x mais rápido** que o SQLite relacional sem índices).
+- **Validação da Indexação Relacional:** A adição de índices compostos cobertos B-Tree, estatísticas `ANALYZE` e modo `WAL` no SQLite acelerou as consultas relacionais em **2.39x** (41.53 ms $\rightarrow$ 17.36 ms), validando o SQLite indexado para persistência transacional (ACID + chaves estrangeiras) em conjunto com **Apache Parquet (4.30 MB vs 20.95 MB brutos — compressão de 4.87x)** para analytics em tempo real.
 
 ### 2.2 Benchmarking de Algoritmos de Mineração de Dados (Clusterização e Risco Atuarial)
 
 #### A. Segmentação Não-Supervisionada de Asteroides Acessíveis (NASA NHATS)
 | Algoritmo Não-Supervisionado     |   Alvos NHATS |   Silhouette |   Calinski-Harabasz |   Davies-Bouldin |   Tempo (ms) |
 |:---------------------------------|--------------:|-------------:|--------------------:|-----------------:|-------------:|
-| Bisecting K-Means (k=4)          |         7,148 |       0.2326 |              2046.7 |           1.3394 |         27.5 |
-| K-Means (Elkan, k=4)             |         7,148 |       0.2322 |              2141.6 |           1.3189 |        199.1 |
-| Agglomerative Ward (k=4)         |         7,148 |       0.1929 |              1630.4 |           1.2465 |       1497.4 |
-| MiniBatch K-Means (k=4)          |         7,148 |       0.1851 |              2005   |           1.5065 |         44   |
-| Gaussian Mixture (GMM Full, k=4) |         7,148 |       0.0923 |              1372.7 |           2.0051 |        238.7 |
+| Bisecting K-Means (k=4)          |         7,148 |       0.2326 |              2046.7 |           1.3394 |         27.8 |
+| K-Means (Elkan, k=4)             |         7,148 |       0.2322 |              2141.6 |           1.3189 |        461.5 |
+| Agglomerative Ward (k=4)         |         7,148 |       0.1929 |              1630.4 |           1.2465 |       2082.4 |
+| MiniBatch K-Means (k=4)          |         7,148 |       0.1851 |              2005   |           1.5065 |         58.1 |
+| Gaussian Mixture (GMM Full, k=4) |         7,148 |       0.0923 |              1372.7 |           2.0051 |        333.5 |
 
-- O algoritmo **Bisecting K-Means (k=4)** obteve a maior coesão estrutural (**Silhouette = 0.2326**, **Davies-Bouldin = 1.3394** em **27.5 ms**), isolando o agrupamento de alvos de órbita quase-terrestre de baixo $\Delta v$ dos objetos de alta excentricidade.
+- O algoritmo **Bisecting K-Means (k=4)** obteve a maior coesão estrutural (**Silhouette = 0.2326**, **Davies-Bouldin = 1.3394** em **27.8 ms**), isolando o agrupamento de alvos de órbita quase-terrestre de baixo $\Delta v$ dos objetos de alta excentricidade.
 
 #### B. Modelagem Preditiva Supervisionada de Sinistro de Lançamento (Validação Cruzada Estratificada 5-Fold, Sem Vazamento Temporal)
 | Modelo Preditivo Atuarial                  |   Voos |   ROC-AUC |   PR-AUC |   Brier Score |   Log-Loss |   F1-Score |   Tempo CV (ms) |
 |:-------------------------------------------|-------:|----------:|---------:|--------------:|-----------:|-----------:|----------------:|
-| Regressão Logística L2 (Baseline Atuarial) |  7,418 |    0.7846 |   0.3093 |       0.05851 |     0.2175 |     0.9032 |              55 |
-| Extra Trees (200 Árvores)                  |  7,418 |    0.7762 |   0.3354 |       0.0575  |     0.216  |     0.9036 |           1,482 |
-| Rede Neural MLP (64x32 ReLU)               |  7,418 |    0.7707 |   0.2853 |       0.05973 |     0.2231 |     0.9036 |           2,262 |
-| Random Forest (200 Árvores)                |  7,418 |    0.7678 |   0.3184 |       0.05809 |     0.2182 |     0.9102 |           2,164 |
-| HistGradientBoosting (GBDT)                |  7,418 |    0.7576 |   0.3113 |       0.05876 |     0.2263 |     0.9121 |           1,586 |
+| Regressão Logística L2 (Baseline Atuarial) |  7,418 |    0.7846 |   0.3093 |       0.05851 |     0.2175 |     0.9032 |              57 |
+| Extra Trees (200 Árvores)                  |  7,418 |    0.7762 |   0.3354 |       0.0575  |     0.216  |     0.9036 |           1,500 |
+| Rede Neural MLP (64x32 ReLU)               |  7,418 |    0.7707 |   0.2853 |       0.05973 |     0.2231 |     0.9036 |           2,265 |
+| Random Forest (200 Árvores)                |  7,418 |    0.7678 |   0.3184 |       0.05809 |     0.2182 |     0.9102 |           2,254 |
+| HistGradientBoosting (GBDT)                |  7,418 |    0.7576 |   0.3113 |       0.05876 |     0.2263 |     0.9121 |           1,295 |
 
 - **Modelo Atuarial Recomendado:** **Regressão Logística L2 (Baseline Atuarial)** entregou **ROC-AUC = 0.7846** e **Brier Score = 0.05851** (calibração probabilística essencial para precificação de prêmios securitários).
 - **Principal Fator Empírico de Risco:** *Taxa Histórica Prévia do Foguete (Bayes)* responde por **18.74%** do poder explicativo do modelo, demonstrando que herança real acumulada e histórico prévio superam variáveis isoladas de porte de carga.

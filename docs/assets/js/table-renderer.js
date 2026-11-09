@@ -76,16 +76,16 @@
       tbody.innerHTML = ranked.slice(0, 20).map(function (r, idx) {
         return (
           '<tr>' +
-          '<td class="txt-col"><strong>#' + (idx + 1) + '</strong></td>' +
+          '<td class="txt-col cell-rank">#' + (idx + 1) + '</td>' +
           '<td class="txt-col">' + escapeHtml(r.pdes) + '</td>' +
           '<td class="txt-col">' + escapeHtml(r.name) + '</td>' +
           '<td class="txt-col">' + escapeHtml(r.spec) + '</td>' +
-          '<td class="num-col" style="color:#34D399;font-weight:700;">' + r.dv.toFixed(3) + '</td>' +
+          '<td class="num-col cell-good">' + r.dv.toFixed(3) + '</td>' +
           '<td class="num-col">' + r.dur + '</td>' +
           '<td class="num-col">' + r.diam.toFixed(1) + '</td>' +
           '<td class="num-col">' + r.obs.toLocaleString('pt-BR') + '</td>' +
           '<td class="num-col">' + r.occ + '</td>' +
-          '<td class="num-col" style="color:#1CA39E;font-weight:800;">' + r.topsis.toFixed(2) + '</td>' +
+          '<td class="num-col cell-accent">' + r.topsis.toFixed(2) + '</td>' +
           '</tr>'
         );
       }).join('');

@@ -3,63 +3,65 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#05070D">
 <title>NewSpace Analytics Cockpit — Benchmarking, Tendências &amp; Decisão Multicritério</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="alternate icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23160D18%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2255%25%22%20stop-color%3D%22%2323145B%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2309456C%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22orb%22%20x1%3D%220%25%22%20y1%3D%22100%25%22%20x2%3D%22100%25%22%20y2%3D%220%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23026F6E%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%231CA39E%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22url%28%23bg%29%22%20stroke%3D%22%231CA39E%22%20stroke-width%3D%222%22/%3E%0A%20%20%3Cellipse%20cx%3D%2232%22%20cy%3D%2232%22%20rx%3D%2224%22%20ry%3D%2210%22%20transform%3D%22rotate%28-32%2032%2032%29%22%20fill%3D%22none%22%20stroke%3D%22url%28%23orb%29%22%20stroke-width%3D%223.2%22/%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%229.5%22%20fill%3D%22%231CA39E%22/%3E%0A%20%20%3Ccircle%20cx%3D%2229%22%20cy%3D%2229.5%22%20r%3D%222.2%22%20fill%3D%22%2309456C%22%20opacity%3D%220.65%22/%3E%0A%20%20%3Ccircle%20cx%3D%2236%22%20cy%3D%2235%22%20r%3D%221.6%22%20fill%3D%22%2309456C%22%20opacity%3D%220.65%22/%3E%0A%20%20%3Ccircle%20cx%3D%2249%22%20cy%3D%2221%22%20r%3D%223.6%22%20fill%3D%22%23F1F5F9%22/%3E%0A%3C/svg%3E">
-<link rel="stylesheet" href="assets/css/dashboard.css?v=b5b194b6">
+<link rel="alternate icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22bg%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2285%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%231E1B4B%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2305070D%22/%3E%0A%20%20%20%20%3C/radialGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22orb%22%20x1%3D%220%25%22%20y1%3D%22100%25%22%20x2%3D%22100%25%22%20y2%3D%220%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%236366F1%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2250%25%22%20stop-color%3D%22%238B5CF6%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2338BDF8%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2216%22%20fill%3D%22url%28%23bg%29%22/%3E%0A%20%20%3Cellipse%20cx%3D%2232%22%20cy%3D%2232%22%20rx%3D%2223%22%20ry%3D%229%22%20transform%3D%22rotate%28-28%2032%2032%29%22%20fill%3D%22none%22%20stroke%3D%22url%28%23orb%29%22%20stroke-width%3D%222.6%22/%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%228.5%22%20fill%3D%22url%28%23orb%29%22/%3E%0A%20%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2220%22%20r%3D%222.8%22%20fill%3D%22%23E2E8F0%22/%3E%0A%20%20%3Ccircle%20cx%3D%2214%22%20cy%3D%2246%22%20r%3D%221.2%22%20fill%3D%22%23E2E8F0%22%20opacity%3D%220.6%22/%3E%0A%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/dashboard.css?v=51546fa5">
 <script defer src="assets/vendor/plotly.min.js?v=4.1.1"></script>
-<script defer src="assets/data/dashboard-data.js?v=b5b194b6"></script>
-<script defer src="assets/js/data-loader.js?v=b5b194b6"></script>
-<script defer src="assets/js/topsis-engine.js?v=b5b194b6"></script>
-<script defer src="assets/js/table-renderer.js?v=b5b194b6"></script>
-<script defer src="assets/js/chart-renderer.js?v=b5b194b6"></script>
-<script defer src="assets/js/ui-controller.js?v=b5b194b6"></script>
+<script defer src="assets/data/dashboard-data.js?v=51546fa5"></script>
+<script defer src="assets/js/data-loader.js?v=51546fa5"></script>
+<script defer src="assets/js/topsis-engine.js?v=51546fa5"></script>
+<script defer src="assets/js/table-renderer.js?v=51546fa5"></script>
+<script defer src="assets/js/chart-renderer.js?v=51546fa5"></script>
+<script defer src="assets/js/ui-controller.js?v=51546fa5"></script>
 </head>
 <body>
-<header>
-  <div class="brand-wrap">
-    <div class="brand-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<div class="space-backdrop" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="./" aria-label="NewSpace Analytics — início">
+      <span class="brand-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#160D18"/>
-      <stop offset="55%" stop-color="#23145B"/>
-      <stop offset="100%" stop-color="#09456C"/>
-    </linearGradient>
+    <radialGradient id="bg" cx="30%" cy="25%" r="85%">
+      <stop offset="0%" stop-color="#1E1B4B"/>
+      <stop offset="100%" stop-color="#05070D"/>
+    </radialGradient>
     <linearGradient id="orb" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#026F6E"/>
-      <stop offset="100%" stop-color="#1CA39E"/>
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="50%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#38BDF8"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="14" fill="url(#bg)" stroke="#1CA39E" stroke-width="2"/>
-  <ellipse cx="32" cy="32" rx="24" ry="10" transform="rotate(-32 32 32)" fill="none" stroke="url(#orb)" stroke-width="3.2"/>
-  <circle cx="32" cy="32" r="9.5" fill="#1CA39E"/>
-  <circle cx="29" cy="29.5" r="2.2" fill="#09456C" opacity="0.65"/>
-  <circle cx="36" cy="35" r="1.6" fill="#09456C" opacity="0.65"/>
-  <circle cx="49" cy="21" r="3.6" fill="#F1F5F9"/>
-</svg></div>
-    <div class="brand-text">
-      <div class="brand-title">NEWSPACE ANALYTICS COCKPIT &bull; MINERAÇÃO &amp; RISCO ATUARIAL</div>
-      <div class="brand-sub">Dados 100% Reais Auditados (NASA JPL SBDB &amp; NHATS &bull; USSPACECOM NORAD SATCAT &bull; Harvard-Smithsonian GCAT)</div>
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="palette-pills">
-      <span>Paleta:</span>
-      <span class="swatch" style="background:#160D18" title="#160D18"></span>
-      <span class="swatch" style="background:#23145B" title="#23145B"></span>
-      <span class="swatch" style="background:#09456C" title="#09456C"></span>
-      <span class="swatch" style="background:#026F6E" title="#026F6E"></span>
-      <span class="swatch" style="background:#1CA39E" title="#1CA39E"></span>
-    </div>
-    <a class="report-btn" href="relatorio.html">Relatório Técnico Executivo &rarr;</a>
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  <ellipse cx="32" cy="32" rx="23" ry="9" transform="rotate(-28 32 32)" fill="none" stroke="url(#orb)" stroke-width="2.6"/>
+  <circle cx="32" cy="32" r="8.5" fill="url(#orb)"/>
+  <circle cx="50" cy="20" r="2.8" fill="#E2E8F0"/>
+  <circle cx="14" cy="46" r="1.2" fill="#E2E8F0" opacity="0.6"/>
+</svg></span>
+      <span class="brand-text">
+        <span class="brand-title">NewSpace Analytics</span>
+        <span class="brand-sub">Mineração, tendências &amp; risco atuarial</span>
+      </span>
+    </a>
+    <a class="report-btn" href="relatorio.html">Relatório técnico <span aria-hidden="true">&rarr;</span></a>
   </div>
 </header>
 
-<nav class="tabs">
-  <button type="button" class="tab-btn active" data-tab="tab-sim">1. Simulador Customizável TOPSIS (Prospecção)</button>
-  <button type="button" class="tab-btn" data-tab="tab-trends">2. Tendência de Produção de Informações (1957–2030)</button>
-  <button type="button" class="tab-btn" data-tab="tab-bench">3. Benchmarking da Mineração &amp; Motores</button>
-  <button type="button" class="tab-btn" data-tab="tab-actuarial">4. Corredores Orbitais &amp; Matriz Atuarial</button>
+<section class="hero">
+  <span class="eyebrow">Dados 100% reais e auditados</span>
+  <h1 class="hero-title">Cockpit de decisão para operações NewSpace</h1>
+  <p class="hero-sub">NASA JPL SBDB &amp; NHATS &middot; USSPACECOM NORAD SATCAT &middot; Harvard-Smithsonian GCAT</p>
+</section>
+
+<nav class="tabs" aria-label="Seções do painel">
+  <div class="tabs-inner">
+    <button type="button" class="tab-btn active" data-tab="tab-sim" title="Simulador Customizável TOPSIS (Prospecção)">Simulador TOPSIS</button>
+    <button type="button" class="tab-btn" data-tab="tab-trends" title="Tendência de Produção de Informações (1957–2030)">Tendências 1957–2030</button>
+    <button type="button" class="tab-btn" data-tab="tab-bench" title="Benchmarking da Mineração &amp; Motores">Benchmarking</button>
+    <button type="button" class="tab-btn" data-tab="tab-actuarial" title="Corredores Orbitais &amp; Matriz Atuarial">Corredores &amp; Atuarial</button>
+  </div>
 </nav>
 
 <main>
@@ -68,14 +70,17 @@
   <!-- TAB 1: CUSTOMIZABLE INTERACTIVE SIMULATOR -->
   <section id="tab-sim" class="tab-panel active">
     <div class="kpi-row">
-      <div class="kpi"><div class="lbl">Registros Reais Auditados</div><div class="val">122,200</div><div class="hint">Zero dados fictícios (SHA-256)</div></div>
-      <div class="kpi"><div class="lbl">Candidatos Qualificados (Filtro Atual)</div><div class="val" id="kpi-cand-count">-</div><div class="hint" id="kpi-retention">-</div></div>
-      <div class="kpi"><div class="lbl">Alvo #1 Recomendado (TOPSIS)</div><div class="val val-compact" id="kpi-top1-name">-</div><div class="hint" id="kpi-top1-meta">-</div></div>
-      <div class="kpi"><div class="lbl">CAGR Produção de Informação</div><div class="val">16.9% a.a.</div><div class="hint">Era NewSpace (2015–2025)</div></div>
+      <div class="kpi"><div class="lbl">Registros reais auditados</div><div class="val">122,200</div><div class="hint">Zero dados fictícios (SHA-256)</div></div>
+      <div class="kpi kpi-accent"><div class="lbl">Candidatos qualificados</div><div class="val" id="kpi-cand-count">-</div><div class="hint" id="kpi-retention">-</div></div>
+      <div class="kpi"><div class="lbl">Alvo #1 recomendado (TOPSIS)</div><div class="val val-compact" id="kpi-top1-name">-</div><div class="hint" id="kpi-top1-meta">-</div></div>
+      <div class="kpi"><div class="lbl">CAGR produção de informação</div><div class="val">16.9% <small>a.a.</small></div><div class="hint">Era NewSpace (2015–2025)</div></div>
     </div>
 
-    <div class="criteria-intro-card">
-      <h2 class="criteria-intro-title">O que são os Critérios de Seleção de Dados e sua Importância na Pesquisa Espacial</h2>
+    <details class="criteria-intro-card">
+      <summary>
+        <h2 class="criteria-intro-title">O que são os Critérios de Seleção de Dados e sua Importância na Pesquisa Espacial</h2>
+        <span class="summary-toggle" aria-hidden="true"></span>
+      </summary>
       <p class="criteria-intro-lead">
         Na ciência de dados aeroespacial, os <strong>critérios de seleção de dados</strong> são filtros físicos, astrométricos e estatísticos aplicados sobre grandes catálogos brutos (43,072 asteroides próximos à Terra na base <em>NASA JPL SBDB</em> e 7,163 alvos com soluções balísticas completas no <em>NASA NHATS</em>) para isolar apenas objetos operacionalmente alcançáveis e com efemérides confiáveis. Como a produção de informações espaciais cresce exponencialmente mas apresenta forte assimetria observacional, essa triagem prévia impede que algoritmos de decisão (<em>MCDA-TOPSIS</em>) ranqueiem alvos energeticamente inviáveis ou com alto risco de perda navegacional.
       </p>
@@ -93,46 +98,46 @@
           Qualifica corpos com escala útil (&ge; 25 m) para sondas precursoras de reconhecimento espectral ou extração de recursos (água/voláteis no Complexo-C e metais em S/X), apoiando a subscrição securitária da missão.
         </div>
       </div>
-    </div>
+    </details>
 
     <div class="sim-layout">
       <aside class="control-box">
         <button type="button" class="mobile-filter-toggle" id="btn-filter-toggle" aria-expanded="true">
-          <span>Ajustar Critérios &amp; Pesos TOPSIS</span>
+          <span>Critérios &amp; pesos TOPSIS</span>
           <span id="filter-toggle-icon">&#9652; Ocultar</span>
         </button>
         <div class="ctrl-body" id="ctrl-body">
           <div class="ctrl-columns">
             <div class="ctrl-col">
               <h3>Critérios de Seleção de Dados</h3>
-              <p class="ctrl-section-note">Restrições eliminatórias físicas, astrométricas e taxonômicas aplicadas sobre os alvos reais da NASA JPL:</p>
+              <p class="ctrl-section-note">Restrições eliminatórias físicas, astrométricas e taxonômicas aplicadas sobre os alvos reais da NASA JPL.</p>
               <div class="ctrl-group">
-                <label for="ctrl-dv"><span>&Delta;v Máximo de Missão (km/s)</span><strong id="lbl-dv">6.50</strong></label>
+                <label for="ctrl-dv"><span>&Delta;v máximo de missão (km/s)</span><strong id="lbl-dv">6.50</strong></label>
                 <input type="range" id="ctrl-dv" min="4.0" max="11.0" step="0.25" value="6.5">
                 <span class="ctrl-hint">Orçamento propulsivo mínimo ida e volta NHATS (padrão: &le; 6,50 km/s).</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-dur"><span>Duração Máxima de Voo (dias)</span><strong id="lbl-dur">450</strong></label>
+                <label for="ctrl-dur"><span>Duração máxima de voo (dias)</span><strong id="lbl-dur">450</strong></label>
                 <input type="range" id="ctrl-dur" min="120" max="450" step="30" value="450">
                 <span class="ctrl-hint">Janela operacional total da trajetória de menor &Delta;v (padrão: &le; 450 d).</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-occ"><span>Incerteza Orbital Máxima (OCC &le;)</span><strong id="lbl-occ">3</strong></label>
+                <label for="ctrl-occ"><span>Incerteza orbital máxima (OCC &le;)</span><strong id="lbl-occ">3</strong></label>
                 <input type="range" id="ctrl-occ" min="0" max="9" step="1" value="3">
                 <span class="ctrl-hint">Escala NASA de incerteza efeméride: 0 = órbita precisa a 9 = incerta (padrão: &le; 3).</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-obs"><span>Observações Astrométricas Mínimas</span><strong id="lbl-obs">50</strong></label>
+                <label for="ctrl-obs"><span>Observações astrométricas mínimas</span><strong id="lbl-obs">50</strong></label>
                 <input type="range" id="ctrl-obs" min="5" max="500" step="5" value="50">
                 <span class="ctrl-hint">Volume mínimo de medições ópticas/radar no SBDB para rastreio seguro (padrão: &ge; 50).</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-diam"><span>Diâmetro Físico Mínimo (m)</span><strong id="lbl-diam">25</strong></label>
+                <label for="ctrl-diam"><span>Diâmetro físico mínimo (m)</span><strong id="lbl-diam">25</strong></label>
                 <input type="range" id="ctrl-diam" min="5" max="400" step="5" value="25">
                 <span class="ctrl-hint">Porte mínimo estimado/medido para operação robótica ou lavra (padrão: &ge; 25 m).</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-grp"><span>Filtro Taxonômico / Mineralógico</span></label>
+                <label for="ctrl-grp"><span>Filtro taxonômico / mineralógico</span></label>
                 <select id="ctrl-grp">
                   <option value="ALL">Todos os Grupos (Incluindo Alvos p/ Sonda Precursora)</option>
                   <option value="KNOWN">Apenas Espectrografados Confirmados pela NASA</option>
@@ -146,38 +151,38 @@
 
             <div class="ctrl-col">
               <h3>Pesos Decisórios MCDA-TOPSIS</h3>
-              <p class="ctrl-section-note">Importância relativa na ordenação dos alvos qualificados (normalização automática para soma = 100%):</p>
+              <p class="ctrl-section-note">Importância relativa na ordenação dos alvos qualificados (normalização automática para soma = 100%).</p>
               <div class="ctrl-group">
-                <label for="ctrl-w1"><span>Peso Eficiência Astrodinâmica (&Delta;v)</span><strong id="lbl-w1">0.40</strong></label>
+                <label for="ctrl-w1"><span>Eficiência astrodinâmica (&Delta;v)</span><strong id="lbl-w1">0.40</strong></label>
                 <input type="range" id="ctrl-w1" min="0.05" max="1.0" step="0.05" value="0.40">
                 <span class="ctrl-hint">Prioriza menor energia propulsiva combinada à menor duração de missão.</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-w2"><span>Peso Maturidade da Informação</span><strong id="lbl-w2">0.25</strong></label>
+                <label for="ctrl-w2"><span>Maturidade da informação</span><strong id="lbl-w2">0.25</strong></label>
                 <input type="range" id="ctrl-w2" min="0.05" max="1.0" step="0.05" value="0.25">
                 <span class="ctrl-hint">Valoriza arco observacional longo, baixo OCC, espectroscopia e diâmetro medido.</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-w3"><span>Peso Porte Físico Mineral</span><strong id="lbl-w3">0.20</strong></label>
+                <label for="ctrl-w3"><span>Porte físico mineral</span><strong id="lbl-w3">0.20</strong></label>
                 <input type="range" id="ctrl-w3" min="0.05" max="1.0" step="0.05" value="0.20">
                 <span class="ctrl-hint">Valoriza maior volume potencial de recursos minerais/voláteis (escala logarítmica).</span>
               </div>
               <div class="ctrl-group">
-                <label for="ctrl-w4"><span>Peso Redundância de Janelas</span><strong id="lbl-w4">0.15</strong></label>
+                <label for="ctrl-w4"><span>Redundância de janelas</span><strong id="lbl-w4">0.15</strong></label>
                 <input type="range" id="ctrl-w4" min="0.05" max="1.0" step="0.05" value="0.15">
                 <span class="ctrl-hint">Valoriza quantidade de soluções balísticas alternativas para flexibilidade de lançamento.</span>
               </div>
 
               <div class="ctrl-actions">
-                <button type="button" class="action-btn" id="btn-export-csv">Exportar Seleção Qualificada (CSV)</button>
-                <button type="button" class="action-btn secondary" id="btn-reset-defaults">Restaurar Critérios Padrão da Equipe</button>
+                <button type="button" class="action-btn" id="btn-export-csv">Exportar seleção (CSV)</button>
+                <button type="button" class="action-btn secondary" id="btn-reset-defaults">Restaurar critérios padrão</button>
               </div>
             </div>
           </div>
         </div>
       </aside>
 
-      <div>
+      <div class="sim-results">
         <div class="chart-card">
           <div class="section-subtitle" id="sim-scatter-title">Espaço de Decisão Astrodinâmico — Alvos Qualificados (NASA JPL NHATS)</div>
           <div id="plot-sim-scatter" class="plot-box"></div>
@@ -234,9 +239,9 @@
   <!-- TAB 3: DATA MINING BENCHMARK -->
   <section id="tab-bench" class="tab-panel">
     <div class="kpi-row kpi-3">
-      <div class="kpi"><div class="lbl">Motor Analítico Mais Rápido</div><div class="val val-compact">Polars (Lazy Parquet)</div><div class="hint">Latência total: 10.53 ms (4.1x speedup)</div></div>
-      <div class="kpi"><div class="lbl">Melhor Clusterização NHATS</div><div class="val val-compact">Bisecting K-Means (k=4)</div><div class="hint">Silhouette: 0.2326</div></div>
-      <div class="kpi"><div class="lbl">Melhor Classificador Atuarial</div><div class="val val-compact">Reg. Logística L2</div><div class="hint">ROC-AUC: 0.7846 | Brier: 0.05851</div></div>
+      <div class="kpi kpi-accent"><div class="lbl">Motor analítico mais rápido</div><div class="val val-compact">Polars (Lazy Parquet)</div><div class="hint">Latência total: 10.06 ms (4.1x speedup)</div></div>
+      <div class="kpi"><div class="lbl">Melhor clusterização NHATS</div><div class="val val-compact">Bisecting K-Means (k=4)</div><div class="hint">Silhouette: 0.2326</div></div>
+      <div class="kpi"><div class="lbl">Melhor classificador atuarial</div><div class="val val-compact">Reg. Logística L2</div><div class="hint">ROC-AUC: 0.7846 | Brier: 0.05851</div></div>
     </div>
     <div class="grid-2">
       <div class="chart-card">
@@ -278,5 +283,10 @@
     </div>
   </section>
 </main>
+
+<footer class="site-footer">
+  <span>NewSpace Analytics &middot; 122,200 registros reais auditados</span>
+  <a href="relatorio.html">Relatório técnico executivo</a>
+</footer>
 </body>
 </html>

@@ -349,100 +349,118 @@ Na pesquisa e mineração de dados espaciais, os **critérios de seleção de da
 <style>
   :root {{
     --bg: {PALETTE.cosmic_bg};
-    --surface: {PALETTE.space_violet};
-    --card: {PALETTE.orbital_blue};
-    --teal: {PALETTE.deep_teal};
-    --cyan: {PALETTE.vibrant_cyan};
+    --nebula: {PALETTE.space_violet};
+    --indigo: {PALETTE.orbital_blue};
+    --violet: {PALETTE.deep_teal};
+    --accent: {PALETTE.vibrant_cyan};
     --text: {PALETTE.text_primary};
     --muted: {PALETTE.text_muted};
+    --surface: rgba(255, 255, 255, 0.025);
+    --surface-2: rgba(255, 255, 255, 0.05);
+    --solid: #0A0D17;
+    --border: rgba(148, 163, 184, 0.10);
+    --border-strong: rgba(148, 163, 184, 0.20);
+    --accent-soft: rgba(56, 189, 248, 0.12);
+    --font: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   }}
   * {{ box-sizing: border-box; }}
   html {{ -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }}
   body {{
     margin: 0;
-    padding: clamp(10px, 2.5vw, 32px) clamp(8px, 2.5vw, 20px);
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: linear-gradient(160deg, var(--bg) 0%, #1c1132 60%, #072c47 100%);
+    padding: clamp(16px, 3vw, 40px) clamp(12px, 3vw, 24px);
+    font-family: var(--font);
+    background:
+      radial-gradient(1000px 580px at 88% -10%, rgba(99, 102, 241, 0.18), transparent 62%),
+      radial-gradient(850px 500px at -8% 8%, rgba(56, 189, 248, 0.10), transparent 60%),
+      radial-gradient(900px 640px at 50% 112%, rgba(139, 92, 246, 0.12), transparent 62%),
+      var(--bg);
     color: var(--text);
-    line-height: 1.6;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }}
   .container {{
     max-width: 1180px; margin: 0 auto;
-    background: rgba(22, 13, 24, 0.95);
-    border: 1px solid rgba(28, 163, 158, 0.35);
-    border-radius: clamp(10px, 2vw, 14px);
-    padding: clamp(18px, 3.8vw, 36px) clamp(14px, 4vw, 44px);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    background: rgba(10, 13, 23, 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: clamp(22px, 4vw, 44px) clamp(16px, 4.2vw, 48px);
   }}
   .top-bar {{
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px;
+    padding-bottom: 16px; border-bottom: 1px solid var(--border);
   }}
   .badge {{
-    display: inline-block; padding: 5px 12px; border-radius: 999px;
-    background: rgba(28, 163, 158, 0.18); border: 1px solid var(--cyan);
-    color: var(--cyan); font-size: clamp(10.5px, 2.2vw, 12px); font-weight: 700; letter-spacing: 0.05em;
-    text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px;
+    background: var(--accent-soft); border: 1px solid rgba(56, 189, 248, 0.28);
+    color: var(--accent); font-size: 11.5px; font-weight: 600; letter-spacing: 0.03em;
   }}
   .nav-link {{
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    min-height: 40px; padding: 8px 15px; border-radius: 8px; text-decoration: none;
-    background: var(--card); color: #fff; border: 1px solid var(--cyan);
-    font-size: 13px; font-weight: 600; transition: background 0.15s;
+    min-height: 38px; padding: 8px 16px; border-radius: 999px; text-decoration: none;
+    background: var(--surface); color: var(--text); border: 1px solid var(--border-strong);
+    font-size: 13px; font-weight: 500; transition: all 0.2s;
   }}
-  .nav-link:hover {{ background: var(--teal); }}
-  h1 {{ font-size: clamp(20px, 4.2vw, 27px); margin: 10px 0 8px; color: #ffffff; line-height: 1.28; }}
+  .nav-link:hover {{ border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }}
+  h1 {{
+    font-size: clamp(22px, 4vw, 32px); margin: 8px 0 8px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.18;
+    background: linear-gradient(92deg, #FFFFFF 0%, #C7D2FE 55%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }}
   h2 {{
-    font-size: clamp(16.5px, 3.2vw, 19.5px); margin-top: clamp(24px, 4vw, 34px); padding-bottom: 8px;
-    border-bottom: 2px solid var(--teal); color: var(--cyan); line-height: 1.3;
+    font-size: clamp(16px, 2.8vw, 19px); margin-top: clamp(28px, 4vw, 38px); padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-strong); color: #FFFFFF; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3;
   }}
-  h3 {{ font-size: clamp(14.5px, 2.8vw, 16px); color: #e2e8f0; margin-top: 20px; line-height: 1.35; }}
-  p, ul li, ol li {{ font-size: clamp(13.5px, 2.5vw, 15px); }}
+  h3 {{ font-size: clamp(14px, 2.4vw, 15.5px); color: var(--text); font-weight: 500; margin-top: 22px; line-height: 1.35; }}
+  p, ul li, ol li {{ font-size: clamp(13.5px, 2.2vw, 14.5px); color: #CBD5E1; }}
   ul, ol {{ padding-left: 20px; }}
-  .meta {{ color: var(--muted); font-size: clamp(12px, 2.3vw, 13.5px); margin-bottom: 20px; line-height: 1.45; }}
+  .meta {{ color: var(--muted); font-size: clamp(12px, 2vw, 13px); margin-bottom: 24px; line-height: 1.5; }}
   .kpi-grid {{
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: clamp(10px, 2vw, 16px);
-    margin: 22px 0;
+    gap: 12px;
+    margin: 24px 0;
   }}
   .kpi-card {{
     min-width: 0;
-    background: linear-gradient(135deg, rgba(35,20,91,0.75), rgba(9,69,108,0.75));
-    border: 1px solid rgba(28,163,158,0.4); border-radius: 10px;
-    padding: clamp(12px, 2.2vw, 16px) clamp(12px, 2.4vw, 18px);
+    background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px 18px;
   }}
-  .kpi-val {{ font-size: clamp(18px, 3.6vw, 24px); font-weight: 800; color: var(--cyan); line-height: 1.2; }}
-  .kpi-lbl {{ font-size: clamp(10px, 2vw, 11.5px); color: var(--muted); text-transform: uppercase; margin-top: 4px; letter-spacing: 0.04em; line-height: 1.3; }}
+  .kpi-val {{ font-size: clamp(20px, 3.2vw, 26px); font-weight: 600; color: var(--accent); letter-spacing: -0.02em; line-height: 1.18; font-variant-numeric: tabular-nums; }}
+  .kpi-lbl {{ font-size: 11.5px; color: var(--muted); margin-top: 6px; letter-spacing: 0.01em; line-height: 1.3; }}
   .callout {{
-    background: rgba(2, 111, 110, 0.18); border-left: 4px solid var(--cyan);
-    padding: clamp(12px, 2.5vw, 15px) clamp(14px, 3vw, 18px); border-radius: 0 8px 8px 0; margin: 18px 0;
-    font-size: clamp(13px, 2.4vw, 14.5px);
+    background: linear-gradient(160deg, rgba(56, 189, 248, 0.08), rgba(99, 102, 241, 0.04));
+    border: 1px solid rgba(56, 189, 248, 0.22); border-left: 3px solid var(--accent);
+    padding: 14px 18px; border-radius: 12px; margin: 18px 0;
+    font-size: clamp(13px, 2.2vw, 14px); color: #CBD5E1;
   }}
   .mobile-scroll-hint {{
-    display: none; font-size: 11px; color: var(--cyan); margin: 6px 0 -8px; font-weight: 600;
+    display: none; font-size: 11.5px; color: var(--muted); margin: 6px 0 -6px;
   }}
   .table-wrap {{
     width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
-    margin: 14px 0 24px; border-radius: 8px; border: 1px solid rgba(28, 163, 158, 0.28);
+    margin: 14px 0 24px; border-radius: 10px; border: 1px solid var(--border);
   }}
   .data-table {{
-    width: 100%; border-collapse: collapse; font-size: clamp(11.8px, 2.1vw, 13px); table-layout: auto;
+    width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto;
   }}
   .data-table th {{
-    background: var(--card); color: #fff; padding: 10px 12px;
-    border-bottom: 2px solid var(--cyan); font-weight: 700; line-height: 1.3; white-space: nowrap;
+    background: var(--solid); color: var(--muted); padding: 11px 14px;
+    border-bottom: 1px solid var(--border-strong); font-size: 11.5px; font-weight: 500; letter-spacing: 0.02em; line-height: 1.3; white-space: nowrap;
   }}
   .data-table td {{
-    padding: 9px 12px; border-bottom: 1px solid rgba(148,163,184,0.16);
-    vertical-align: middle;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    vertical-align: middle; color: #CBD5E1;
   }}
+  .data-table tbody tr:last-child td {{ border-bottom: 0; }}
   .data-table th.txt-col, .data-table td.txt-col {{ text-align: left; }}
   .data-table th.num-col, .data-table td.num-col {{
     text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap;
   }}
-  .data-table tr:nth-child(even) {{ background: rgba(35, 20, 91, 0.26); }}
-  .data-table tr:hover {{ background: rgba(28, 163, 158, 0.12); }}
+  .data-table tbody tr:hover {{ background: var(--surface-2); }}
   ul li {{ margin-bottom: 8px; }}
 
   /* Tablet Breakpoint */
@@ -451,19 +469,17 @@ Na pesquisa e mineração de dados espaciais, os **critérios de seleção de da
     .mobile-scroll-hint {{ display: block; }}
     .data-table th:first-child, .data-table td:first-child {{
       position: sticky; left: 0; z-index: 2;
-      box-shadow: 2px 0 6px rgba(0, 0, 0, 0.45);
+      background: var(--solid);
     }}
-    .data-table th:first-child {{ background: var(--card); z-index: 3; }}
-    .data-table td:first-child {{ background: #1a1128; }}
-    .data-table tr:nth-child(even) td:first-child {{ background: #201538; }}
+    .data-table th:first-child {{ z-index: 3; }}
   }}
 
   /* Smartphone Breakpoint */
   @media (max-width: 560px) {{
     .top-bar {{ flex-direction: column; align-items: stretch; }}
-    .badge {{ text-align: center; }}
-    .nav-link {{ width: 100%; min-height: 44px; }}
-    .data-table th, .data-table td {{ padding: 8px 9px; }}
+    .badge {{ justify-content: center; text-align: center; }}
+    .nav-link {{ width: 100%; min-height: 42px; }}
+    .data-table th, .data-table td {{ padding: 9px 10px; }}
     .data-table td.txt-col {{ min-width: 120px; }}
     .data-table td:first-child {{ min-width: 72px; }}
   }}
@@ -474,8 +490,8 @@ Na pesquisa e mineração de dados espaciais, os **critérios de seleção de da
     body {{ background: #fff; color: #111; padding: 0; }}
     .container {{ box-shadow: none; border: none; background: #fff; color: #111; padding: 16px; max-width: 100%; }}
     .nav-link {{ display: none; }}
-    h1, h2, h3, .kpi-val {{ color: #09456C !important; }}
-    .data-table th {{ background: #09456C !important; color: #fff !important; -webkit-print-color-adjust: exact; }}
+    h1, h2, h3, .kpi-val {{ color: #1E1B4B !important; -webkit-text-fill-color: #1E1B4B !important; }}
+    .data-table th {{ background: #1E1B4B !important; color: #fff !important; -webkit-print-color-adjust: exact; }}
   }}
 </style>
 </head>

@@ -5,104 +5,122 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relatório Técnico Executivo — Operações NewSpace</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="alternate icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23160D18%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2255%25%22%20stop-color%3D%22%2323145B%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2309456C%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22orb%22%20x1%3D%220%25%22%20y1%3D%22100%25%22%20x2%3D%22100%25%22%20y2%3D%220%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23026F6E%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%231CA39E%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22url%28%23bg%29%22%20stroke%3D%22%231CA39E%22%20stroke-width%3D%222%22/%3E%0A%20%20%3Cellipse%20cx%3D%2232%22%20cy%3D%2232%22%20rx%3D%2224%22%20ry%3D%2210%22%20transform%3D%22rotate%28-32%2032%2032%29%22%20fill%3D%22none%22%20stroke%3D%22url%28%23orb%29%22%20stroke-width%3D%223.2%22/%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%229.5%22%20fill%3D%22%231CA39E%22/%3E%0A%20%20%3Ccircle%20cx%3D%2229%22%20cy%3D%2229.5%22%20r%3D%222.2%22%20fill%3D%22%2309456C%22%20opacity%3D%220.65%22/%3E%0A%20%20%3Ccircle%20cx%3D%2236%22%20cy%3D%2235%22%20r%3D%221.6%22%20fill%3D%22%2309456C%22%20opacity%3D%220.65%22/%3E%0A%20%20%3Ccircle%20cx%3D%2249%22%20cy%3D%2221%22%20r%3D%223.6%22%20fill%3D%22%23F1F5F9%22/%3E%0A%3C/svg%3E">
+<link rel="alternate icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22bg%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2285%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%231E1B4B%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2305070D%22/%3E%0A%20%20%20%20%3C/radialGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22orb%22%20x1%3D%220%25%22%20y1%3D%22100%25%22%20x2%3D%22100%25%22%20y2%3D%220%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%236366F1%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2250%25%22%20stop-color%3D%22%238B5CF6%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2338BDF8%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2216%22%20fill%3D%22url%28%23bg%29%22/%3E%0A%20%20%3Cellipse%20cx%3D%2232%22%20cy%3D%2232%22%20rx%3D%2223%22%20ry%3D%229%22%20transform%3D%22rotate%28-28%2032%2032%29%22%20fill%3D%22none%22%20stroke%3D%22url%28%23orb%29%22%20stroke-width%3D%222.6%22/%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%228.5%22%20fill%3D%22url%28%23orb%29%22/%3E%0A%20%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2220%22%20r%3D%222.8%22%20fill%3D%22%23E2E8F0%22/%3E%0A%20%20%3Ccircle%20cx%3D%2214%22%20cy%3D%2246%22%20r%3D%221.2%22%20fill%3D%22%23E2E8F0%22%20opacity%3D%220.6%22/%3E%0A%3C/svg%3E">
 <style>
   :root {
-    --bg: #160D18;
-    --surface: #23145B;
-    --card: #09456C;
-    --teal: #026F6E;
-    --cyan: #1CA39E;
-    --text: #F1F5F9;
-    --muted: #94A3B8;
+    --bg: #05070D;
+    --nebula: #1E1B4B;
+    --indigo: #6366F1;
+    --violet: #8B5CF6;
+    --accent: #38BDF8;
+    --text: #E2E8F0;
+    --muted: #7C8599;
+    --surface: rgba(255, 255, 255, 0.025);
+    --surface-2: rgba(255, 255, 255, 0.05);
+    --solid: #0A0D17;
+    --border: rgba(148, 163, 184, 0.10);
+    --border-strong: rgba(148, 163, 184, 0.20);
+    --accent-soft: rgba(56, 189, 248, 0.12);
+    --font: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   body {
     margin: 0;
-    padding: clamp(10px, 2.5vw, 32px) clamp(8px, 2.5vw, 20px);
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: linear-gradient(160deg, var(--bg) 0%, #1c1132 60%, #072c47 100%);
+    padding: clamp(16px, 3vw, 40px) clamp(12px, 3vw, 24px);
+    font-family: var(--font);
+    background:
+      radial-gradient(1000px 580px at 88% -10%, rgba(99, 102, 241, 0.18), transparent 62%),
+      radial-gradient(850px 500px at -8% 8%, rgba(56, 189, 248, 0.10), transparent 60%),
+      radial-gradient(900px 640px at 50% 112%, rgba(139, 92, 246, 0.12), transparent 62%),
+      var(--bg);
     color: var(--text);
-    line-height: 1.6;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
   .container {
     max-width: 1180px; margin: 0 auto;
-    background: rgba(22, 13, 24, 0.95);
-    border: 1px solid rgba(28, 163, 158, 0.35);
-    border-radius: clamp(10px, 2vw, 14px);
-    padding: clamp(18px, 3.8vw, 36px) clamp(14px, 4vw, 44px);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    background: rgba(10, 13, 23, 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: clamp(22px, 4vw, 44px) clamp(16px, 4.2vw, 48px);
   }
   .top-bar {
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px;
+    padding-bottom: 16px; border-bottom: 1px solid var(--border);
   }
   .badge {
-    display: inline-block; padding: 5px 12px; border-radius: 999px;
-    background: rgba(28, 163, 158, 0.18); border: 1px solid var(--cyan);
-    color: var(--cyan); font-size: clamp(10.5px, 2.2vw, 12px); font-weight: 700; letter-spacing: 0.05em;
-    text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px;
+    background: var(--accent-soft); border: 1px solid rgba(56, 189, 248, 0.28);
+    color: var(--accent); font-size: 11.5px; font-weight: 600; letter-spacing: 0.03em;
   }
   .nav-link {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    min-height: 40px; padding: 8px 15px; border-radius: 8px; text-decoration: none;
-    background: var(--card); color: #fff; border: 1px solid var(--cyan);
-    font-size: 13px; font-weight: 600; transition: background 0.15s;
+    min-height: 38px; padding: 8px 16px; border-radius: 999px; text-decoration: none;
+    background: var(--surface); color: var(--text); border: 1px solid var(--border-strong);
+    font-size: 13px; font-weight: 500; transition: all 0.2s;
   }
-  .nav-link:hover { background: var(--teal); }
-  h1 { font-size: clamp(20px, 4.2vw, 27px); margin: 10px 0 8px; color: #ffffff; line-height: 1.28; }
+  .nav-link:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  h1 {
+    font-size: clamp(22px, 4vw, 32px); margin: 8px 0 8px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.18;
+    background: linear-gradient(92deg, #FFFFFF 0%, #C7D2FE 55%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
   h2 {
-    font-size: clamp(16.5px, 3.2vw, 19.5px); margin-top: clamp(24px, 4vw, 34px); padding-bottom: 8px;
-    border-bottom: 2px solid var(--teal); color: var(--cyan); line-height: 1.3;
+    font-size: clamp(16px, 2.8vw, 19px); margin-top: clamp(28px, 4vw, 38px); padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-strong); color: #FFFFFF; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3;
   }
-  h3 { font-size: clamp(14.5px, 2.8vw, 16px); color: #e2e8f0; margin-top: 20px; line-height: 1.35; }
-  p, ul li, ol li { font-size: clamp(13.5px, 2.5vw, 15px); }
+  h3 { font-size: clamp(14px, 2.4vw, 15.5px); color: var(--text); font-weight: 500; margin-top: 22px; line-height: 1.35; }
+  p, ul li, ol li { font-size: clamp(13.5px, 2.2vw, 14.5px); color: #CBD5E1; }
   ul, ol { padding-left: 20px; }
-  .meta { color: var(--muted); font-size: clamp(12px, 2.3vw, 13.5px); margin-bottom: 20px; line-height: 1.45; }
+  .meta { color: var(--muted); font-size: clamp(12px, 2vw, 13px); margin-bottom: 24px; line-height: 1.5; }
   .kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: clamp(10px, 2vw, 16px);
-    margin: 22px 0;
+    gap: 12px;
+    margin: 24px 0;
   }
   .kpi-card {
     min-width: 0;
-    background: linear-gradient(135deg, rgba(35,20,91,0.75), rgba(9,69,108,0.75));
-    border: 1px solid rgba(28,163,158,0.4); border-radius: 10px;
-    padding: clamp(12px, 2.2vw, 16px) clamp(12px, 2.4vw, 18px);
+    background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px 18px;
   }
-  .kpi-val { font-size: clamp(18px, 3.6vw, 24px); font-weight: 800; color: var(--cyan); line-height: 1.2; }
-  .kpi-lbl { font-size: clamp(10px, 2vw, 11.5px); color: var(--muted); text-transform: uppercase; margin-top: 4px; letter-spacing: 0.04em; line-height: 1.3; }
+  .kpi-val { font-size: clamp(20px, 3.2vw, 26px); font-weight: 600; color: var(--accent); letter-spacing: -0.02em; line-height: 1.18; font-variant-numeric: tabular-nums; }
+  .kpi-lbl { font-size: 11.5px; color: var(--muted); margin-top: 6px; letter-spacing: 0.01em; line-height: 1.3; }
   .callout {
-    background: rgba(2, 111, 110, 0.18); border-left: 4px solid var(--cyan);
-    padding: clamp(12px, 2.5vw, 15px) clamp(14px, 3vw, 18px); border-radius: 0 8px 8px 0; margin: 18px 0;
-    font-size: clamp(13px, 2.4vw, 14.5px);
+    background: linear-gradient(160deg, rgba(56, 189, 248, 0.08), rgba(99, 102, 241, 0.04));
+    border: 1px solid rgba(56, 189, 248, 0.22); border-left: 3px solid var(--accent);
+    padding: 14px 18px; border-radius: 12px; margin: 18px 0;
+    font-size: clamp(13px, 2.2vw, 14px); color: #CBD5E1;
   }
   .mobile-scroll-hint {
-    display: none; font-size: 11px; color: var(--cyan); margin: 6px 0 -8px; font-weight: 600;
+    display: none; font-size: 11.5px; color: var(--muted); margin: 6px 0 -6px;
   }
   .table-wrap {
     width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
-    margin: 14px 0 24px; border-radius: 8px; border: 1px solid rgba(28, 163, 158, 0.28);
+    margin: 14px 0 24px; border-radius: 10px; border: 1px solid var(--border);
   }
   .data-table {
-    width: 100%; border-collapse: collapse; font-size: clamp(11.8px, 2.1vw, 13px); table-layout: auto;
+    width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto;
   }
   .data-table th {
-    background: var(--card); color: #fff; padding: 10px 12px;
-    border-bottom: 2px solid var(--cyan); font-weight: 700; line-height: 1.3; white-space: nowrap;
+    background: var(--solid); color: var(--muted); padding: 11px 14px;
+    border-bottom: 1px solid var(--border-strong); font-size: 11.5px; font-weight: 500; letter-spacing: 0.02em; line-height: 1.3; white-space: nowrap;
   }
   .data-table td {
-    padding: 9px 12px; border-bottom: 1px solid rgba(148,163,184,0.16);
-    vertical-align: middle;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    vertical-align: middle; color: #CBD5E1;
   }
+  .data-table tbody tr:last-child td { border-bottom: 0; }
   .data-table th.txt-col, .data-table td.txt-col { text-align: left; }
   .data-table th.num-col, .data-table td.num-col {
     text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap;
   }
-  .data-table tr:nth-child(even) { background: rgba(35, 20, 91, 0.26); }
-  .data-table tr:hover { background: rgba(28, 163, 158, 0.12); }
+  .data-table tbody tr:hover { background: var(--surface-2); }
   ul li { margin-bottom: 8px; }
 
   /* Tablet Breakpoint */
@@ -111,19 +129,17 @@
     .mobile-scroll-hint { display: block; }
     .data-table th:first-child, .data-table td:first-child {
       position: sticky; left: 0; z-index: 2;
-      box-shadow: 2px 0 6px rgba(0, 0, 0, 0.45);
+      background: var(--solid);
     }
-    .data-table th:first-child { background: var(--card); z-index: 3; }
-    .data-table td:first-child { background: #1a1128; }
-    .data-table tr:nth-child(even) td:first-child { background: #201538; }
+    .data-table th:first-child { z-index: 3; }
   }
 
   /* Smartphone Breakpoint */
   @media (max-width: 560px) {
     .top-bar { flex-direction: column; align-items: stretch; }
-    .badge { text-align: center; }
-    .nav-link { width: 100%; min-height: 44px; }
-    .data-table th, .data-table td { padding: 8px 9px; }
+    .badge { justify-content: center; text-align: center; }
+    .nav-link { width: 100%; min-height: 42px; }
+    .data-table th, .data-table td { padding: 9px 10px; }
     .data-table td.txt-col { min-width: 120px; }
     .data-table td:first-child { min-width: 72px; }
   }
@@ -134,8 +150,8 @@
     body { background: #fff; color: #111; padding: 0; }
     .container { box-shadow: none; border: none; background: #fff; color: #111; padding: 16px; max-width: 100%; }
     .nav-link { display: none; }
-    h1, h2, h3, .kpi-val { color: #09456C !important; }
-    .data-table th { background: #09456C !important; color: #fff !important; -webkit-print-color-adjust: exact; }
+    h1, h2, h3, .kpi-val { color: #1E1B4B !important; -webkit-text-fill-color: #1E1B4B !important; }
+    .data-table th { background: #1E1B4B !important; color: #fff !important; -webkit-print-color-adjust: exact; }
   }
 </style>
 </head>
@@ -146,7 +162,7 @@
     <a class="nav-link" href="index.html">&larr; Voltar ao Dashboard Interativo</a>
   </div>
   <h1>Benchmarking de Mineração, Tendências de Informação e Seleção Multicritério</h1>
-  <div class="meta">Gerado em 05/11/2026 15:50 • Base Empírica Auditada: 122,200 registros reais (NASA JPL SBDB &amp; NHATS, USSPACECOM SATCAT, Harvard-Smithsonian GCAT)</div>
+  <div class="meta">Gerado em 09/11/2026 16:57 • Base Empírica Auditada: 122,200 registros reais (NASA JPL SBDB &amp; NHATS, USSPACECOM SATCAT, Harvard-Smithsonian GCAT)</div>
 
   <div class="kpi-grid">
     <div class="kpi-card"><div class="kpi-val">122,200</div><div class="kpi-lbl">Registros Científicos Reais</div></div>
@@ -157,11 +173,11 @@
 
   <h2>1. Benchmarking de Motores de Persistência e Mineração</h2>
   <p>Comparativo empírico entre o modelo relacional SQLite (sem e com indexação composta B-Tree + WAL + ANALYZE) e motores analíticos em memória/colunares:</p>
-  <div class="mobile-scroll-hint">&harr; Deslize lateralmente para ver todas as métricas</div><div class="table-wrap"><table class="data-table"><thead><tr><th class="txt-col">Motor Analítico / Persistência</th><th class="num-col">Latência Total (ms)</th><th class="num-col">Média / Carga (ms)</th><th class="num-col">P95 (ms)</th><th class="num-col">Memória Pico (KB)</th><th class="num-col">Vazão (mil reg/s)</th><th class="num-col">Speedup</th></tr></thead><tbody><tr><td class="txt-col">Polars (Lazy Parquet)</td><td class="num-col">10.53</td><td class="num-col">3.52</td><td class="num-col">3.69</td><td class="num-col">5.0</td><td class="num-col">11,630.4</td><td class="num-col">4.08x</td></tr><tr><td class="txt-col">SQLite (Indexado + WAL)</td><td class="num-col">17.39</td><td class="num-col">5.83</td><td class="num-col">5.95</td><td class="num-col">20.7</td><td class="num-col">27,602.4</td><td class="num-col">2.47x</td></tr><tr><td class="txt-col">DuckDB (OLAP Parquet)</td><td class="num-col">18.11</td><td class="num-col">6.10</td><td class="num-col">6.34</td><td class="num-col">218.8</td><td class="num-col">6,334.1</td><td class="num-col">2.37x</td></tr><tr><td class="txt-col">Pandas (In-Memory)</td><td class="num-col">35.04</td><td class="num-col">11.68</td><td class="num-col">12.13</td><td class="num-col">4,260.8</td><td class="num-col">3,571.5</td><td class="num-col">1.23x</td></tr><tr><td class="txt-col">SQLite (Sem Índices)</td><td class="num-col">42.93</td><td class="num-col">14.33</td><td class="num-col">14.58</td><td class="num-col">20.7</td><td class="num-col">2,799.7</td><td class="num-col">1.00x</td></tr></tbody></table></div>
+  <div class="mobile-scroll-hint">&harr; Deslize lateralmente para ver todas as métricas</div><div class="table-wrap"><table class="data-table"><thead><tr><th class="txt-col">Motor Analítico / Persistência</th><th class="num-col">Latência Total (ms)</th><th class="num-col">Média / Carga (ms)</th><th class="num-col">P95 (ms)</th><th class="num-col">Memória Pico (KB)</th><th class="num-col">Vazão (mil reg/s)</th><th class="num-col">Speedup</th></tr></thead><tbody><tr><td class="txt-col">Polars (Lazy Parquet)</td><td class="num-col">10.06</td><td class="num-col">3.34</td><td class="num-col">3.62</td><td class="num-col">5.0</td><td class="num-col">11,860.2</td><td class="num-col">4.13x</td></tr><tr><td class="txt-col">SQLite (Indexado + WAL)</td><td class="num-col">17.36</td><td class="num-col">5.83</td><td class="num-col">5.98</td><td class="num-col">20.7</td><td class="num-col">27,183.3</td><td class="num-col">2.39x</td></tr><tr><td class="txt-col">DuckDB (OLAP Parquet)</td><td class="num-col">17.71</td><td class="num-col">5.93</td><td class="num-col">6.18</td><td class="num-col">218.8</td><td class="num-col">6,440.4</td><td class="num-col">2.35x</td></tr><tr><td class="txt-col">Pandas (In-Memory)</td><td class="num-col">34.24</td><td class="num-col">11.49</td><td class="num-col">11.84</td><td class="num-col">4,260.8</td><td class="num-col">3,618.2</td><td class="num-col">1.21x</td></tr><tr><td class="txt-col">SQLite (Sem Índices)</td><td class="num-col">41.53</td><td class="num-col">14.06</td><td class="num-col">14.64</td><td class="num-col">20.7</td><td class="num-col">2,911.2</td><td class="num-col">1.00x</td></tr></tbody></table></div>
   <h3>Modelagem Atuarial Supervisionada de Risco de Lançamento (5-Fold CV)</h3>
-  <div class="mobile-scroll-hint">&harr; Deslize lateralmente para ver todas as métricas</div><div class="table-wrap"><table class="data-table"><thead><tr><th class="txt-col">Modelo Preditivo Atuarial</th><th class="num-col">Voos</th><th class="num-col">ROC-AUC</th><th class="num-col">PR-AUC</th><th class="num-col">Brier Score</th><th class="num-col">Log-Loss</th><th class="num-col">F1-Score</th><th class="num-col">Tempo CV (ms)</th></tr></thead><tbody><tr><td class="txt-col">Regressão Logística L2 (Baseline Atuarial)</td><td class="num-col">7,418</td><td class="num-col">0.7846</td><td class="num-col">0.3093</td><td class="num-col">0.05851</td><td class="num-col">0.2175</td><td class="num-col">0.9032</td><td class="num-col">55</td></tr><tr><td class="txt-col">Extra Trees (200 Árvores)</td><td class="num-col">7,418</td><td class="num-col">0.7762</td><td class="num-col">0.3354</td><td class="num-col">0.05750</td><td class="num-col">0.2160</td><td class="num-col">0.9036</td><td class="num-col">1,482</td></tr><tr><td class="txt-col">Rede Neural MLP (64x32 ReLU)</td><td class="num-col">7,418</td><td class="num-col">0.7707</td><td class="num-col">0.2853</td><td class="num-col">0.05973</td><td class="num-col">0.2231</td><td class="num-col">0.9036</td><td class="num-col">2,262</td></tr><tr><td class="txt-col">Random Forest (200 Árvores)</td><td class="num-col">7,418</td><td class="num-col">0.7678</td><td class="num-col">0.3184</td><td class="num-col">0.05809</td><td class="num-col">0.2182</td><td class="num-col">0.9102</td><td class="num-col">2,164</td></tr><tr><td class="txt-col">HistGradientBoosting (GBDT)</td><td class="num-col">7,418</td><td class="num-col">0.7576</td><td class="num-col">0.3113</td><td class="num-col">0.05876</td><td class="num-col">0.2263</td><td class="num-col">0.9121</td><td class="num-col">1,586</td></tr></tbody></table></div>
+  <div class="mobile-scroll-hint">&harr; Deslize lateralmente para ver todas as métricas</div><div class="table-wrap"><table class="data-table"><thead><tr><th class="txt-col">Modelo Preditivo Atuarial</th><th class="num-col">Voos</th><th class="num-col">ROC-AUC</th><th class="num-col">PR-AUC</th><th class="num-col">Brier Score</th><th class="num-col">Log-Loss</th><th class="num-col">F1-Score</th><th class="num-col">Tempo CV (ms)</th></tr></thead><tbody><tr><td class="txt-col">Regressão Logística L2 (Baseline Atuarial)</td><td class="num-col">7,418</td><td class="num-col">0.7846</td><td class="num-col">0.3093</td><td class="num-col">0.05851</td><td class="num-col">0.2175</td><td class="num-col">0.9032</td><td class="num-col">57</td></tr><tr><td class="txt-col">Extra Trees (200 Árvores)</td><td class="num-col">7,418</td><td class="num-col">0.7762</td><td class="num-col">0.3354</td><td class="num-col">0.05750</td><td class="num-col">0.2160</td><td class="num-col">0.9036</td><td class="num-col">1,500</td></tr><tr><td class="txt-col">Rede Neural MLP (64x32 ReLU)</td><td class="num-col">7,418</td><td class="num-col">0.7707</td><td class="num-col">0.2853</td><td class="num-col">0.05973</td><td class="num-col">0.2231</td><td class="num-col">0.9036</td><td class="num-col">2,265</td></tr><tr><td class="txt-col">Random Forest (200 Árvores)</td><td class="num-col">7,418</td><td class="num-col">0.7678</td><td class="num-col">0.3184</td><td class="num-col">0.05809</td><td class="num-col">0.2182</td><td class="num-col">0.9102</td><td class="num-col">2,254</td></tr><tr><td class="txt-col">HistGradientBoosting (GBDT)</td><td class="num-col">7,418</td><td class="num-col">0.7576</td><td class="num-col">0.3113</td><td class="num-col">0.05876</td><td class="num-col">0.2263</td><td class="num-col">0.9121</td><td class="num-col">1,295</td></tr></tbody></table></div>
   <div class="callout">
-    <strong>Síntese Técnica:</strong> O motor <strong>Polars (Lazy Parquet)</strong> reduziu a latência analítica total para <strong>10.53 ms</strong>, enquanto índices compostos cobertos aceleraram o SQLite em <strong>2.47x</strong>. Na subscrição de risco, <strong>Regressão Logística L2 (Baseline Atuarial)</strong> alcançou ROC-AUC de <strong>0.7846</strong> e Brier Score de <strong>0.05851</strong>.
+    <strong>Síntese Técnica:</strong> O motor <strong>Polars (Lazy Parquet)</strong> reduziu a latência analítica total para <strong>10.06 ms</strong>, enquanto índices compostos cobertos aceleraram o SQLite em <strong>2.39x</strong>. Na subscrição de risco, <strong>Regressão Logística L2 (Baseline Atuarial)</strong> alcançou ROC-AUC de <strong>0.7846</strong> e Brier Score de <strong>0.05851</strong>.
   </div>
 
   <h2>2. Tendência de Produção de Informações e Gargalo Espectroscópico</h2>

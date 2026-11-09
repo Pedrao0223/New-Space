@@ -25,22 +25,21 @@ NOTEBOOKS_DIR: Path = PROJECT_ROOT / "notebooks"
 
 FAVICON_SVG: str = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#160D18"/>
-      <stop offset="55%" stop-color="#23145B"/>
-      <stop offset="100%" stop-color="#09456C"/>
-    </linearGradient>
+    <radialGradient id="bg" cx="30%" cy="25%" r="85%">
+      <stop offset="0%" stop-color="#1E1B4B"/>
+      <stop offset="100%" stop-color="#05070D"/>
+    </radialGradient>
     <linearGradient id="orb" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#026F6E"/>
-      <stop offset="100%" stop-color="#1CA39E"/>
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="50%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#38BDF8"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="14" fill="url(#bg)" stroke="#1CA39E" stroke-width="2"/>
-  <ellipse cx="32" cy="32" rx="24" ry="10" transform="rotate(-32 32 32)" fill="none" stroke="url(#orb)" stroke-width="3.2"/>
-  <circle cx="32" cy="32" r="9.5" fill="#1CA39E"/>
-  <circle cx="29" cy="29.5" r="2.2" fill="#09456C" opacity="0.65"/>
-  <circle cx="36" cy="35" r="1.6" fill="#09456C" opacity="0.65"/>
-  <circle cx="49" cy="21" r="3.6" fill="#F1F5F9"/>
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  <ellipse cx="32" cy="32" rx="23" ry="9" transform="rotate(-28 32 32)" fill="none" stroke="url(#orb)" stroke-width="2.6"/>
+  <circle cx="32" cy="32" r="8.5" fill="url(#orb)"/>
+  <circle cx="50" cy="20" r="2.8" fill="#E2E8F0"/>
+  <circle cx="14" cy="46" r="1.2" fill="#E2E8F0" opacity="0.6"/>
 </svg>"""
 
 FAVICON_DATA_URI: str = "data:image/svg+xml," + quote(FAVICON_SVG)
@@ -48,20 +47,23 @@ FAVICON_DATA_URI: str = "data:image/svg+xml," + quote(FAVICON_SVG)
 
 @dataclass(frozen=True)
 class BrandPalette:
-    """Official color palette extracted from team design specification (download.pdf)."""
+    """Modern "Deep Space" palette: void background, indigo/violet nebula tones and star-blue accent.
 
-    cosmic_bg: str = "#160D18"       # RGB(22, 13, 24)  - Deep Cosmic Background
-    space_violet: str = "#23145B"    # RGB(35, 20, 91)  - Surface / Secondary Dark
-    orbital_blue: str = "#09456C"    # RGB(9, 69, 108)  - Primary Container / Structural Accent
-    deep_teal: str = "#026F6E"       # RGB(2, 111, 110) - Secondary Analytical Series
-    vibrant_cyan: str = "#1CA39E"    # RGB(28, 163, 158)- Primary Highlight / KPI / Trend Line
+    Field names are kept stable for backward compatibility; each field documents its semantic role.
+    """
 
-    # Complementary high-contrast UI & semantic status colors for dark cosmic theme
-    text_primary: str = "#F1F5F9"
-    text_muted: str = "#94A3B8"
-    grid_line: str = "#2A2438"
-    accent_gold: str = "#F59E0B"     # Highlighting inflection points / warnings
-    accent_coral: str = "#EF4444"    # High collision / actuarial risk alert
+    cosmic_bg: str = "#05070D"       # Void black-blue        - Page / figure background
+    space_violet: str = "#1E1B4B"    # Indigo nebula (950)     - Deep surface / colorscale low end
+    orbital_blue: str = "#6366F1"    # Indigo (500)            - Secondary analytical series
+    deep_teal: str = "#8B5CF6"       # Violet (500)            - Tertiary analytical series
+    vibrant_cyan: str = "#38BDF8"    # Star blue (sky 400)     - Primary accent / KPI / trend line
+
+    # Neutral UI tones & semantic status colors for the dark space theme
+    text_primary: str = "#E2E8F0"
+    text_muted: str = "#7C8599"
+    grid_line: str = "#161B2B"
+    accent_gold: str = "#FBBF24"     # Inflection points / warnings
+    accent_coral: str = "#FB7185"    # High collision / actuarial risk alert
     accent_mint: str = "#34D399"     # Optimal viability confirmation
 
     @property
@@ -78,12 +80,12 @@ class BrandPalette:
     def categorical_series(self) -> list[str]:
         return [
             self.vibrant_cyan,
-            "#38BDF8",
-            self.deep_teal,
-            "#818CF8",
+            "#A78BFA",
+            self.orbital_blue,
+            "#22D3EE",
             self.accent_gold,
             "#F472B6",
-            self.orbital_blue,
+            self.deep_teal,
         ]
 
 

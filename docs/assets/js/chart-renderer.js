@@ -11,6 +11,8 @@
   function stripCardDuplicateTitle(layout) {
     const copy = deepClone(layout || {});
     copy.title = { text: '' };
+    copy.paper_bgcolor = 'rgba(0,0,0,0)';
+    copy.plot_bgcolor = '#05070D';
     return copy;
   }
 
@@ -106,37 +108,44 @@
         color: scores,
         cmin: equalScores ? 0 : minScore,
         cmax: equalScores ? 100 : maxScore,
-        colorscale: [[0, '#23145B'], [0.35, '#09456C'], [0.7, '#026F6E'], [1, '#1CA39E']],
+        colorscale: [[0, '#1E1B4B'], [0.35, '#6366F1'], [0.7, '#8B5CF6'], [1, '#38BDF8']],
         colorbar: {
           title: { text: isMobile ? 'TOPSIS' : 'Score<br>TOPSIS', font: { size: isMobile ? 10 : 11.5 } },
-          thickness: isMobile ? 10 : 16,
+          thickness: isMobile ? 10 : 14,
           len: isMobile ? 0.80 : 0.90,
-          tickfont: { size: isMobile ? 9.5 : 11 }
+          outlinewidth: 0,
+          tickfont: { size: isMobile ? 9.5 : 11, color: '#7C8599' }
         },
-        line: { color: 'rgba(255,255,255,0.6)', width: 1 }
+        line: { color: 'rgba(226,232,240,0.45)', width: 1 }
       }
     };
 
     const layout = {
       title: { text: '' },
       height: isMobile ? 355 : (isTablet ? 420 : 460),
-      paper_bgcolor: '#1D1226',
-      plot_bgcolor: '#160D18',
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: '#05070D',
       font: {
-        color: '#F1F5F9',
-        family: 'Segoe UI, sans-serif',
+        color: '#E2E8F0',
+        family: "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif",
         size: isMobile ? 10.5 : (isTablet ? 11.2 : 12)
       },
       margin: { l: isMobile ? 44 : 55, r: isMobile ? 12 : 24, t: 18, b: 46 },
       xaxis: {
         title: { text: 'Δv Mínimo NASA NHATS (km/s)' },
-        gridcolor: '#2A2438',
+        gridcolor: '#161B2B',
+        zerolinecolor: '#161B2B',
+        linecolor: '#161B2B',
+        tickfont: { color: '#7C8599' },
         automargin: true,
         autorange: true
       },
       yaxis: {
         title: { text: 'Duração da Missão (Dias)' },
-        gridcolor: '#2A2438',
+        gridcolor: '#161B2B',
+        zerolinecolor: '#161B2B',
+        linecolor: '#161B2B',
+        tickfont: { color: '#7C8599' },
         automargin: true,
         autorange: true
       }
