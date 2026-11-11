@@ -494,6 +494,8 @@ Na pesquisa e mineração de dados espaciais, os **critérios de seleção de da
     .data-table th {{ background: #1E1B4B !important; color: #fff !important; -webkit-print-color-adjust: exact; }}
   }}
 </style>
+<link rel="stylesheet" href="assets/css/nsa-chatbot.css">
+<script defer src="assets/js/nsa-chatbot.js"></script>
 </head>
 <body>
 <div class="container">

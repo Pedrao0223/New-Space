@@ -37,6 +37,8 @@ from newspace.selection_trends import (
 from newspace.web_assets import (
     CHART_RENDERER_JS,
     DATA_LOADER_JS,
+    NSA_CHATBOT_CSS,
+    NSA_CHATBOT_JS,
     TABLE_RENDERER_JS,
     TOPSIS_ENGINE_JS,
     UI_CONTROLLER_JS,
@@ -963,12 +965,14 @@ def _write_modular_dashboard_bundle(
 
     (target_dir / "favicon.svg").write_text(FAVICON_SVG, encoding="utf-8")
     (css_dir / "dashboard.css").write_text(css_content, encoding="utf-8")
+    (css_dir / "nsa-chatbot.css").write_text(NSA_CHATBOT_CSS, encoding="utf-8")
     (data_dir / "dashboard-data.js").write_text(data_js_content, encoding="utf-8")
     (js_dir / "data-loader.js").write_text(DATA_LOADER_JS, encoding="utf-8")
     (js_dir / "topsis-engine.js").write_text(TOPSIS_ENGINE_JS, encoding="utf-8")
     (js_dir / "table-renderer.js").write_text(TABLE_RENDERER_JS, encoding="utf-8")
     (js_dir / "chart-renderer.js").write_text(CHART_RENDERER_JS, encoding="utf-8")
     (js_dir / "ui-controller.js").write_text(UI_CONTROLLER_JS, encoding="utf-8")
+    (js_dir / "nsa-chatbot.js").write_text(NSA_CHATBOT_JS, encoding="utf-8")
 
     vendor_dst = vendor_dir / "plotly.min.js"
     if plotly_bundle_src.exists():
@@ -1094,6 +1098,7 @@ def export_standalone_custom_dashboard(
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="alternate icon" href="{FAVICON_DATA_URI}">
 <link rel="stylesheet" href="assets/css/dashboard.css?v={asset_ver}">
+<link rel="stylesheet" href="assets/css/nsa-chatbot.css?v={asset_ver}">
 <script defer src="assets/vendor/plotly.min.js?v=4.1.1"></script>
 <script defer src="assets/data/dashboard-data.js?v={asset_ver}"></script>
 <script defer src="assets/js/data-loader.js?v={asset_ver}"></script>
@@ -1101,6 +1106,7 @@ def export_standalone_custom_dashboard(
 <script defer src="assets/js/table-renderer.js?v={asset_ver}"></script>
 <script defer src="assets/js/chart-renderer.js?v={asset_ver}"></script>
 <script defer src="assets/js/ui-controller.js?v={asset_ver}"></script>
+<script defer src="assets/js/nsa-chatbot.js?v={asset_ver}"></script>
 </head>
 <body>
 <div class="space-backdrop" aria-hidden="true"></div>

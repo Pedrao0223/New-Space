@@ -169,6 +169,7 @@ def test_executed_notebook_and_dashboard_artifacts():
     # Verify modular frontend architecture exists in both reports/ and docs/
     expected_assets = (
         "assets/css/dashboard.css",
+        "assets/css/nsa-chatbot.css",
         "assets/vendor/plotly.min.js",
         "assets/data/dashboard-data.js",
         "assets/js/data-loader.js",
@@ -176,6 +177,7 @@ def test_executed_notebook_and_dashboard_artifacts():
         "assets/js/table-renderer.js",
         "assets/js/chart-renderer.js",
         "assets/js/ui-controller.js",
+        "assets/js/nsa-chatbot.js",
     )
     for rel_asset in expected_assets:
         rep_asset = REPORTS_DIR / rel_asset
@@ -439,3 +441,200 @@ console.log(JSON.stringify({
     assert summary["renderedPlots"] == 10
     assert summary["rowCount"] == 20
     assert "Apophis" in summary["defaultTop1"]
+
+
+def test_nsa_chatbot_qa_widget():
+    """Verify isolated Mini Chatbot Q&A CSS/JS modules, knowledge base fidelity, and interactive flow."""
+    dash_html = (DOCS_DIR / "index.html").read_text(encoding="utf-8")
+    rep_html = (DOCS_DIR / "relatorio.html").read_text(encoding="utf-8")
+    bot_css = (DOCS_DIR / "assets/css/nsa-chatbot.css").read_text(encoding="utf-8")
+    bot_js = (DOCS_DIR / "assets/js/nsa-chatbot.js").read_text(encoding="utf-8")
+
+    assert "assets/css/nsa-chatbot.css" in dash_html
+    assert "assets/js/nsa-chatbot.js" in dash_html
+    assert "assets/css/nsa-chatbot.css" in rep_html
+    assert "assets/js/nsa-chatbot.js" in rep_html
+
+    for css_token in (
+        ".nsa-bot-wrapper",
+        ".nsa-bot-window",
+        ".nsa-bot-chip",
+        "position: fixed;",
+        "bottom: 24px;",
+        "right: 24px;",
+        "z-index: 9999;",
+        "max-width: calc(100vw - 32px);",
+        "max-height: 520px;",
+        "#0f172a",
+        "#1e293b",
+        "#38bdf8",
+    ):
+        assert css_token in bot_css, f"Missing CSS token: {css_token}"
+
+    for js_token in (
+        "NSA_CHATBOT_KNOWLEDGE",
+        "origem-dados",
+        "delta-v",
+        "incerteza-occ",
+        "mineralogia-25m",
+        "ranking-topsis",
+        "era-newspace",
+        "risco-atuarial",
+        "Olá! Sou o guia rápido do NewSpace Analytics. Clique em qualquer pergunta abaixo para entender os conceitos técnicos do painel de forma simples:",
+    ):
+        assert js_token in bot_js, f"Missing JS token: {js_token}"
+
+    node_bot_test = r"""
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+
+const docsDir = process.argv[1];
+const idMap = {};
+
+function createNode(tag) {
+  const classes = new Set();
+  const attrs = {};
+  const listeners = {};
+  const children = [];
+  let html = '';
+  let text = '';
+
+  const node = {
+    tagName: String(tag).toUpperCase(),
+    id: '',
+    className: '',
+    parentNode: null,
+    scrollTop: 0,
+    scrollHeight: 500,
+    children,
+    listeners,
+    classList: {
+      add: c => classes.add(c),
+      remove: c => classes.delete(c),
+      contains: c => classes.has(c)
+    },
+    setAttribute: (k, v) => {
+      attrs[k] = String(v);
+      if (k === 'id') { node.id = String(v); idMap[node.id] = node; }
+    },
+    getAttribute: k => attrs[k] || null,
+    addEventListener: (ev, fn) => { (listeners[ev] = listeners[ev] || []).push(fn); },
+    appendChild: child => {
+      child.parentNode = node;
+      children.push(child);
+      if (child.id) idMap[child.id] = child;
+      return child;
+    },
+    removeChild: child => {
+      const idx = children.indexOf(child);
+      if (idx !== -1) children.splice(idx, 1);
+      if (child.id && idMap[child.id] === child) delete idMap[child.id];
+      child.parentNode = null;
+    },
+    scrollIntoView: () => {},
+    querySelectorAll: sel => {
+      if (sel === '.nsa-bot-chip') {
+        const matches = [...html.matchAll(/data-question-id="([^"]+)"/g)];
+        return matches.map(m => {
+          const btn = createNode('button');
+          btn.setAttribute('data-question-id', m[1]);
+          return btn;
+        });
+      }
+      return [];
+    },
+    get innerHTML() { return html; },
+    set innerHTML(val) {
+      html = String(val);
+      if (val === '') {
+        children.forEach(c => { if (c.id && idMap[c.id] === c) delete idMap[c.id]; });
+        children.length = 0;
+      }
+      const idMatches = [...html.matchAll(/id="([^"]+)"/g)];
+      idMatches.forEach(m => {
+        if (!idMap[m[1]]) {
+          const sub = createNode('div');
+          sub.id = m[1];
+          idMap[m[1]] = sub;
+        }
+      });
+    },
+    get textContent() { return text; },
+    set textContent(val) { text = String(val); html = String(val); }
+  };
+  return node;
+}
+
+const bodyNode = createNode('body');
+const sandbox = {
+  console,
+  String, Boolean, Set, Array, Object,
+  document: {
+    readyState: 'complete',
+    body: bodyNode,
+    createElement: tag => createNode(tag),
+    getElementById: id => idMap[id] || null,
+    addEventListener: () => {}
+  }
+};
+sandbox.window = sandbox;
+sandbox.globalThis = sandbox;
+vm.createContext(sandbox);
+
+const code = fs.readFileSync(path.join(docsDir, 'assets/js/nsa-chatbot.js'), 'utf8');
+vm.runInContext(code, sandbox, { filename: 'nsa-chatbot.js' });
+
+if (!Array.isArray(sandbox.NSA_CHATBOT_KNOWLEDGE) || sandbox.NSA_CHATBOT_KNOWLEDGE.length !== 7) {
+  throw new Error('Expected 7 items in NSA_CHATBOT_KNOWLEDGE');
+}
+if (!sandbox.NSAChatbot.isInitialized() || !idMap['nsa-bot-wrapper']) {
+  throw new Error('Chatbot wrapper was not initialized in DOM');
+}
+
+// Open window
+sandbox.NSAChatbot.open();
+if (!idMap['nsa-bot-window'].classList.contains('nsa-bot-open')) {
+  throw new Error('Window did not get nsa-bot-open class');
+}
+
+// Verify initial welcome + 7 available questions
+if (sandbox.NSAChatbot.getAvailableQuestions().length !== 7) {
+  throw new Error('Expected 7 initial questions');
+}
+
+// Ask a question and verify remaining questions become 6
+const ans = sandbox.NSAChatbot.ask('delta-v');
+if (!ans || !ans.answer.includes('Delta-v')) {
+  throw new Error('Unexpected answer for delta-v');
+}
+if (sandbox.NSAChatbot.getAvailableQuestions().length !== 6) {
+  throw new Error('Expected 6 remaining questions after asking 1');
+}
+
+// Show all questions -> restores all 7
+sandbox.NSAChatbot.showAll();
+if (sandbox.NSAChatbot.getAvailableQuestions().length !== 7) {
+  throw new Error('showAll did not restore all 7 questions');
+}
+
+// Close window
+sandbox.NSAChatbot.close();
+if (idMap['nsa-bot-window'].classList.contains('nsa-bot-open')) {
+  throw new Error('Window did not close');
+}
+
+console.log(JSON.stringify({ ok: true, count: sandbox.NSA_CHATBOT_KNOWLEDGE.length }));
+"""
+    res = subprocess.run(
+        ["node", "-e", node_bot_test, str(DOCS_DIR)],
+        capture_output=True,
+        text=True,
+        check=False,
+        encoding="utf-8",
+    )
+    assert res.returncode == 0, f"Chatbot JS test failed:\n{res.stderr}"
+    out = json.loads(res.stdout.strip())
+    assert out["ok"] is True
+    assert out["count"] == 7
+

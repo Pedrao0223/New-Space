@@ -1490,3 +1490,637 @@ UI_CONTROLLER_JS = """/* Module 5: Interactive UI Controller & Fault-Tolerant Bo
   }
 })(typeof window !== 'undefined' ? window : globalThis);
 """
+
+
+NSA_CHATBOT_CSS = """/* NewSpace Analytics — Mini Chatbot Q&A para Leigos (100% Isolated Client-Side Styles) */
+.nsa-bot-wrapper {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: var(--font, Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif);
+  color: #E2E8F0;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.nsa-bot-wrapper *,
+.nsa-bot-wrapper *::before,
+.nsa-bot-wrapper *::after {
+  box-sizing: border-box;
+}
+
+/* Floating Launcher Button */
+.nsa-bot-launcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #0b0f19 0%, #0f172a 100%);
+  border: 1px solid #0284c7;
+  color: #F8FAFC;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(5, 7, 13, 0.8), 0 0 0 1px rgba(56, 189, 248, 0.18), 0 0 18px rgba(2, 132, 199, 0.28);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease, background 0.2s ease;
+}
+
+.nsa-bot-launcher:hover,
+.nsa-bot-launcher:focus-visible {
+  border-color: #38bdf8;
+  box-shadow: 0 12px 32px rgba(5, 7, 13, 0.9), 0 0 0 2px rgba(56, 189, 248, 0.32), 0 0 24px rgba(56, 189, 248, 0.4);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.nsa-bot-launcher-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 10px #38bdf8;
+  flex-shrink: 0;
+}
+
+.nsa-bot-launcher-icon {
+  width: 18px;
+  height: 18px;
+  color: #38bdf8;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nsa-bot-launcher-label {
+  white-space: nowrap;
+}
+
+/* Assistant Window Card */
+.nsa-bot-window {
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  max-height: 520px;
+  height: min(520px, calc(100vh - 96px));
+  margin-bottom: 12px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  box-shadow: 0 22px 54px rgba(5, 7, 13, 0.88), 0 0 0 1px rgba(56, 189, 248, 0.14);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: nsa-bot-fade-up 0.2s ease-out;
+}
+
+.nsa-bot-window.nsa-bot-open {
+  display: flex;
+}
+
+@keyframes nsa-bot-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header */
+.nsa-bot-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #0b0f19 0%, #1e1b4b 100%);
+  border-bottom: 1px solid #1e293b;
+  flex-shrink: 0;
+}
+
+.nsa-bot-header-info {
+  min-width: 0;
+}
+
+.nsa-bot-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #F8FAFC;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.nsa-bot-subtitle {
+  margin: 3px 0 0;
+  font-size: 11.5px;
+  color: #94A3B8;
+  line-height: 1.35;
+}
+
+.nsa-bot-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  background: rgba(255, 255, 255, 0.04);
+  color: #CBD5E1;
+  font-family: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+
+.nsa-bot-close:hover,
+.nsa-bot-close:focus-visible {
+  border-color: #38bdf8;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  outline: none;
+}
+
+/* Messages & Interactive Flow */
+.nsa-bot-messages {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #1e293b transparent;
+}
+
+.nsa-bot-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nsa-bot-messages::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 999px;
+}
+
+.nsa-bot-msg {
+  max-width: 92%;
+  padding: 10px 13px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  word-wrap: break-word;
+}
+
+.nsa-bot-msg-bot {
+  align-self: flex-start;
+  background: #0b0f19;
+  border: 1px solid #1e293b;
+  border-left: 3px solid #38bdf8;
+  color: #E2E8F0;
+  border-top-left-radius: 4px;
+}
+
+.nsa-bot-msg-user {
+  align-self: flex-end;
+  background: rgba(2, 132, 199, 0.22);
+  border: 1px solid rgba(56, 189, 248, 0.42);
+  color: #F0F9FF;
+  font-weight: 500;
+  border-top-right-radius: 4px;
+}
+
+/* Quick Replies / Question Chips Block */
+.nsa-bot-chips-block {
+  margin-top: 2px;
+  padding-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nsa-bot-chips-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94A3B8;
+  margin-bottom: 2px;
+}
+
+.nsa-bot-chips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nsa-bot-chip {
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #0b0f19;
+  border: 1px solid #1e293b;
+  color: #E2E8F0;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.nsa-bot-chip:hover,
+.nsa-bot-chip:focus-visible {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.10);
+  color: #38bdf8;
+  outline: none;
+}
+
+.nsa-bot-chip-arrow {
+  color: #38bdf8;
+  font-size: 13px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+/* Footer Navigation Bar */
+.nsa-bot-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #0b0f19;
+  border-top: 1px solid #1e293b;
+  flex-shrink: 0;
+}
+
+.nsa-bot-footer-btn {
+  padding: 6px 11px;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  background: rgba(255, 255, 255, 0.03);
+  color: #CBD5E1;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+
+.nsa-bot-footer-btn:hover,
+.nsa-bot-footer-btn:focus-visible {
+  border-color: #38bdf8;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.10);
+  outline: none;
+}
+
+.nsa-bot-footer-status {
+  font-size: 11px;
+  color: #64748B;
+  white-space: nowrap;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 640px) {
+  .nsa-bot-wrapper {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .nsa-bot-window {
+    width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
+    max-height: min(520px, calc(100vh - 88px));
+  }
+
+  .nsa-bot-launcher {
+    min-height: 44px;
+    padding: 9px 15px;
+    font-size: 13px;
+  }
+}
+
+@media print {
+  .nsa-bot-wrapper {
+    display: none !important;
+  }
+}
+"""
+
+
+NSA_CHATBOT_JS = """/* NewSpace Analytics — Mini Chatbot Q&A para Leigos (100% Client-Side Assisted Q&A) */
+(() => {
+  'use strict';
+
+  const NSA_CHATBOT_KNOWLEDGE = [
+    {
+      id: "origem-dados",
+      question: "De onde vêm os dados deste painel?",
+      answer: "O NewSpace Analytics utiliza mais de 122 mil registros de dados 100% reais e auditados de agências oficiais: NASA (bases JPL SBDB & NHATS), USSPACECOM NORAD e Harvard-Smithsonian. Todo esse volume é processado em alta velocidade pelo motor analítico Polars."
+    },
+    {
+      id: "delta-v",
+      question: "O que é Δv (Viabilidade Astrodinâmica)?",
+      answer: "De forma simples, o Δv (Delta-v) mede o 'esforço de empurrão' ou a quantidade de combustível necessária para uma nave sair da Terra e alcançar o asteroide. Quanto menor o Δv e o tempo de viagem, mais barata e viável é a missão."
+    },
+    {
+      id: "incerteza-occ",
+      question: "O que significa Precisão Navegacional (OCC)?",
+      answer: "OCC é o filtro de incerteza orbital. Ele mede o quão bem conhecemos a rota futura de um asteroide. O painel filtra apenas alvos com rotas altamente previsíveis e rastreáveis, evitando o risco de enviar uma sonda e 'perder' o alvo no espaço."
+    },
+    {
+      id: "mineralogia-25m",
+      question: "Por que buscar asteroides maiores que 25m?",
+      answer: "Asteroides acima de 25 metros possuem volume útil para Aplicação Mineralógica. Neles é possível extrair água e voláteis (que servem para produzir combustível no próprio espaço) ou metais valiosos para uso industrial."
+    },
+    {
+      id: "ranking-topsis",
+      question: "Como funciona o Ranking TOPSIS (Top 20)?",
+      answer: "O método matemático TOPSIS cruza múltiplos critérios em tempo real para ranquear os 20 melhores asteroides. Ele encontra o equilíbrio ideal entre menor gasto de energia (fácil de chegar) e maior volume de recursos (alto retorno)."
+    },
+    {
+      id: "era-newspace",
+      question: "O que é a Era NewSpace Exponencial (2015–2026)?",
+      answer: "Na seção de Evolução da Era Espacial, mostramos como o setor mudou: antes dominado apenas por governos (era estatal clássica), entre 2015 e 2026 houve um salto exponencial no lançamento de satélites e objetos orbitais liderado por empresas privadas."
+    },
+    {
+      id: "risco-atuarial",
+      question: "Como funciona a Análise de Risco Atuarial e os Ratings?",
+      answer: "Funciona como uma análise de seguro e investimento para missões espaciais. A matriz cruza um alvo (como o asteroide Apophis) com um foguete lançador (como o Falcon 9 ou Chang Zheng) e calcula uma nota de risco operacional (Rating A, BB, B, etc.) baseada no histórico real de sucesso."
+    }
+  ];
+
+  const WELCOME_MESSAGE =
+    "Olá! Sou o guia rápido do NewSpace Analytics. Clique em qualquer pergunta abaixo para entender os conceitos técnicos do painel de forma simples:";
+
+  const askedIds = new Set();
+  let showAllQuestions = false;
+  let isOpen = false;
+  let isInitialized = false;
+
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function getAvailableQuestions() {
+    if (showAllQuestions || askedIds.size === 0 || askedIds.size >= NSA_CHATBOT_KNOWLEDGE.length) {
+      return NSA_CHATBOT_KNOWLEDGE.slice();
+    }
+    return NSA_CHATBOT_KNOWLEDGE.filter(function (item) {
+      return !askedIds.has(item.id);
+    });
+  }
+
+  function renderChipsBlock(messagesEl) {
+    if (!messagesEl) return;
+
+    const existingBlock = document.getElementById('nsa-bot-chips-block');
+    if (existingBlock && existingBlock.parentNode) {
+      existingBlock.parentNode.removeChild(existingBlock);
+    }
+
+    const available = getAvailableQuestions();
+    const allAnswered = askedIds.size >= NSA_CHATBOT_KNOWLEDGE.length;
+
+    let labelText = 'Perguntas principais (clique para traduzir):';
+    if (showAllQuestions && askedIds.size > 0) {
+      labelText = 'Todas as perguntas do guia:';
+    } else if (allAnswered) {
+      labelText = 'Todos os tópicos explorados — clique para rever:';
+    } else if (askedIds.size > 0) {
+      labelText = 'Perguntas restantes (' + available.length + '):';
+    }
+
+    const block = document.createElement('div');
+    block.className = 'nsa-bot-chips-block';
+    block.id = 'nsa-bot-chips-block';
+
+    const chipsHtml = available
+      .map(function (item) {
+        return (
+          '<button type="button" class="nsa-bot-chip" data-question-id="' +
+          escapeHtml(item.id) +
+          '">' +
+          '<span>' +
+          escapeHtml(item.question) +
+          '</span>' +
+          '<span class="nsa-bot-chip-arrow" aria-hidden="true">&rarr;</span>' +
+          '</button>'
+        );
+      })
+      .join('');
+
+    block.innerHTML =
+      '<div class="nsa-bot-chips-label">' +
+      escapeHtml(labelText) +
+      '</div>' +
+      '<div class="nsa-bot-chips-list">' +
+      chipsHtml +
+      '</div>';
+
+    messagesEl.appendChild(block);
+
+    const chipButtons = block.querySelectorAll('.nsa-bot-chip');
+    chipButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const qId = btn.getAttribute('data-question-id');
+        askQuestionById(qId);
+      });
+    });
+  }
+
+  function appendMessage(messagesEl, role, text) {
+    const msg = document.createElement('div');
+    msg.className = 'nsa-bot-msg ' + (role === 'user' ? 'nsa-bot-msg-user' : 'nsa-bot-msg-bot');
+    msg.textContent = text;
+    messagesEl.appendChild(msg);
+    return msg;
+  }
+
+  function renderInitialConversation() {
+    const messagesEl = document.getElementById('nsa-bot-messages');
+    if (!messagesEl) return;
+    messagesEl.innerHTML = '';
+    askedIds.clear();
+    showAllQuestions = false;
+    appendMessage(messagesEl, 'bot', WELCOME_MESSAGE);
+    renderChipsBlock(messagesEl);
+  }
+
+  function askQuestionById(questionId) {
+    const item = NSA_CHATBOT_KNOWLEDGE.find(function (entry) {
+      return entry.id === questionId;
+    });
+    if (!item) return null;
+
+    const messagesEl = document.getElementById('nsa-bot-messages');
+    if (!messagesEl) return null;
+
+    const existingBlock = document.getElementById('nsa-bot-chips-block');
+    if (existingBlock && existingBlock.parentNode) {
+      existingBlock.parentNode.removeChild(existingBlock);
+    }
+
+    askedIds.add(item.id);
+    showAllQuestions = false;
+
+    const userMsgEl = appendMessage(messagesEl, 'user', item.question);
+    appendMessage(messagesEl, 'bot', item.answer);
+    renderChipsBlock(messagesEl);
+
+    if (typeof userMsgEl.scrollIntoView === 'function') {
+      userMsgEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    return item;
+  }
+
+  function showAllTopics() {
+    const messagesEl = document.getElementById('nsa-bot-messages');
+    if (!messagesEl) return;
+    showAllQuestions = true;
+    renderChipsBlock(messagesEl);
+    const block = document.getElementById('nsa-bot-chips-block');
+    if (block && typeof block.scrollIntoView === 'function') {
+      block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+  }
+
+  function setWindowOpen(nextState) {
+    isOpen = Boolean(nextState);
+    const winEl = document.getElementById('nsa-bot-window');
+    const launcherEl = document.getElementById('nsa-bot-launcher');
+    if (winEl) {
+      if (isOpen) {
+        winEl.classList.add('nsa-bot-open');
+      } else {
+        winEl.classList.remove('nsa-bot-open');
+      }
+    }
+    if (launcherEl) {
+      launcherEl.setAttribute('aria-expanded', String(isOpen));
+    }
+  }
+
+  function toggleWindow() {
+    setWindowOpen(!isOpen);
+  }
+
+  function initChatbot() {
+    if (typeof document === 'undefined' || !document.body) return;
+    if (document.getElementById('nsa-bot-wrapper')) {
+      isInitialized = true;
+      return;
+    }
+
+    const wrapper = document.createElement('aside');
+    wrapper.className = 'nsa-bot-wrapper';
+    wrapper.id = 'nsa-bot-wrapper';
+    wrapper.setAttribute('aria-label', 'Assistente de Perguntas e Respostas NewSpace');
+
+    wrapper.innerHTML =
+      '<div class="nsa-bot-window" id="nsa-bot-window" role="dialog" aria-modal="false" aria-labelledby="nsa-bot-title">' +
+        '<div class="nsa-bot-header">' +
+          '<div class="nsa-bot-header-info">' +
+            '<h2 class="nsa-bot-title" id="nsa-bot-title">Assistente NewSpace (Guia para Leigos)</h2>' +
+            '<p class="nsa-bot-subtitle">Tradução rápida das métricas do painel</p>' +
+          '</div>' +
+          '<button type="button" class="nsa-bot-close" id="nsa-bot-close" aria-label="Fechar assistente" title="Fechar">&times;</button>' +
+        '</div>' +
+        '<div class="nsa-bot-messages" id="nsa-bot-messages" aria-live="polite"></div>' +
+        '<div class="nsa-bot-footer">' +
+          '<button type="button" class="nsa-bot-footer-btn" id="nsa-bot-show-all">Ver todas as perguntas</button>' +
+          '<button type="button" class="nsa-bot-footer-btn" id="nsa-bot-reset">Reiniciar guia</button>' +
+        '</div>' +
+      '</div>' +
+      '<button type="button" class="nsa-bot-launcher" id="nsa-bot-launcher" aria-expanded="false" aria-controls="nsa-bot-window">' +
+        '<span class="nsa-bot-launcher-dot" aria-hidden="true"></span>' +
+        '<span class="nsa-bot-launcher-label">Guia Rápido • Dúvidas?</span>' +
+      '</button>';
+
+    document.body.appendChild(wrapper);
+    renderInitialConversation();
+
+    const launcherBtn = document.getElementById('nsa-bot-launcher');
+    const closeBtn = document.getElementById('nsa-bot-close');
+    const showAllBtn = document.getElementById('nsa-bot-show-all');
+    const resetBtn = document.getElementById('nsa-bot-reset');
+
+    if (launcherBtn) {
+      launcherBtn.addEventListener('click', toggleWindow);
+    }
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        setWindowOpen(false);
+      });
+    }
+    if (showAllBtn) {
+      showAllBtn.addEventListener('click', showAllTopics);
+    }
+    if (resetBtn) {
+      resetBtn.addEventListener('click', renderInitialConversation);
+    }
+
+    document.addEventListener('keydown', function (ev) {
+      if (ev && ev.key === 'Escape' && isOpen) {
+        setWindowOpen(false);
+      }
+    });
+
+    isInitialized = true;
+  }
+
+  const globalRef = typeof window !== 'undefined' ? window : globalThis;
+  globalRef.NSA_CHATBOT_KNOWLEDGE = NSA_CHATBOT_KNOWLEDGE;
+  globalRef.NSAChatbot = {
+    KNOWLEDGE: NSA_CHATBOT_KNOWLEDGE,
+    WELCOME_MESSAGE: WELCOME_MESSAGE,
+    init: initChatbot,
+    open: function () { setWindowOpen(true); },
+    close: function () { setWindowOpen(false); },
+    toggle: toggleWindow,
+    ask: askQuestionById,
+    showAll: showAllTopics,
+    reset: renderInitialConversation,
+    getAvailableQuestions: getAvailableQuestions,
+    isInitialized: function () { return isInitialized; }
+  };
+
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initChatbot);
+    } else {
+      initChatbot();
+    }
+  }
+})();
+"""
